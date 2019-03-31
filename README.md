@@ -4,7 +4,14 @@ toolbox of randoms stuff for [Alliance Auth](https://gitlab.com/allianceauth/all
 
 ## Install 
 
-With your auth venv active, install the django app with the following command `pip install git+https://github.com/pvyParts/allianceauth-toolbox.git`.
+With your auth venv active, install the django app with the following command 
+```
+pip install git+https://github.com/pvyParts/allianceauth-toolbox.git
+```
+
+add `'toolbox',` to your INSTALLED_APPS in your local.py
+
+run migrations and restart auth
 
 ## Permisions
 
