@@ -1,0 +1,29 @@
+{% extends 'allianceauth/base.html' %}
+{% load i18n %}
+{% block page_title %}{% trans "EVE Notes" %}{% endblock %}
+{% block extra_css %}
+{% include 'bundles/datatables-css.html' %}
+{% endblock extra_css %}
+
+{% block content %}
+
+<h4 class="text-center col-md-12">Editing Note</h4>
+<p class="text-center col-md-12">Please ensure character below is correct!</p>
+<div class="text-center col-md-12">
+{% evename_img note.eve_id note.eve_name note.eve_catagory 128  %}
+<h4>{{note.eve_name}}</h4>
+</div>
+<form action="/toolbox/edit_note/{{note.id}}/" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="note_id" value="{{note.id}}" />
+    <p>
+        {{ form.reason.label_tag }}
+        {{ form.reason|addclass:'form-control' }}
+    </p>
+    <p>
+        {{ form.blacklisted.label_tag }}
+        {{ form.blacklisted|addclass:'form-check' }}
+    </p>
+    <input type="submit" value="Submit" class="btn btn-primary">
+</form>
+{% endblock %}
