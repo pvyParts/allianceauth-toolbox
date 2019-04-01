@@ -5,7 +5,7 @@ from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 class AllianceMenu(MenuItemHook):
     def __init__(self):
-        MenuItemHook.__init__(self, 'Little Black Book',
+        MenuItemHook.__init__(self, 'Pilot Log',
                               'fa fa-address-book fa-fw',
                               'toolbox:eve_note_board',
                               navactive=['toolbox:eve_note_board'])
