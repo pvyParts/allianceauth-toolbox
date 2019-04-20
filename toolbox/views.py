@@ -4,7 +4,7 @@ from django.contrib import messages
 from esi.clients import esi_client_factory
 
 from .models import EveNote, EveNoteComment
-from .forms import EditNote, SearchEveName, AddEveNote, AddComment, AddRestrictedComment
+from .forms import SearchEveName, EveNoteForm, AddComment, AddRestrictedComment
 
 import logging
 
@@ -14,17 +14,38 @@ import logging
 @login_required
 @permission_required('toolbox.view_eve_notes')
 def eve_note_board(request):
-    eve_notes = EveNote.objects.all().prefetch_related('comment')
-    blacklist = EveNote.objects.filter(blacklisted=True).prefetch_related('comment')
+    restricted = request.user.has_perm('toolbox.add_restricted_eve_notes')
+    ultra_restricted = request.user.has_perm('toolbox.add_ultra_restricted_eve_notes')
+
+    #  Basic Level
+    eve_notes = EveNote.objects.filter(restricted=False, ultra_restricted=False).prefetch_related('comment')
+
+    #  Restricted view
+    if restricted:
+        if eve_notes:
+            eve_notes = eve_notes | EveNote.objects.filter(restricted=True).prefetch_related('comment')
+        else:
+            eve_notes = EveNote.objects.filter(restricted=True).prefetch_related('comment')
+
+    #  Ultra Restricted view
+    if ultra_restricted:
+        if eve_notes:
+            eve_notes = eve_notes | EveNote.objects.filter(ultra_restricted=True).prefetch_related('comment')
+        else:
+            eve_notes = EveNote.objects.filter(ultra_restricted=True).prefetch_related('comment')
+
+
     context = {
         'add_note': request.user.has_perm('toolbox.add_new_eve_notes'),
+        'view_restricted_note': request.user.has_perm('toolbox.view_restricted_eve_notes'),
+        'view_ultra_restricted_note': request.user.has_perm('toolbox.view_ultra_restricted_eve_notes'),
+        'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
         'edit_note': request.user.has_perm('toolbox.add_new_eve_notes'),
         'add_comment': request.user.has_perm('toolbox.add_new_eve_note_comments'),
         'add_restricted_comment': request.user.has_perm('toolbox.add_new_eve_note_restricted_comments'),
         'view_comment': request.user.has_perm('toolbox.view_eve_note_comments'),
         'view_restricted_comment': request.user.has_perm('toolbox.view_eve_note_restricted_comments'),
-        'notes': eve_notes,
-        'blacklist': blacklist,
+        'notes': eve_notes
     }
 
     return render(request, 'toolbox/evenotes.html', context=context)
@@ -68,27 +89,45 @@ def search_name(request):
         form = SearchEveName()
         return render(request, 'toolbox/search_name.html', {'form': form})
 
+
 @login_required
 @permission_required('toolbox.add_new_eve_notes')
 def add_note(request, eve_id=None):
     if eve_id:
         if request.method == 'POST':
-            form = AddEveNote(request.POST)
+            form = EveNoteForm(request.POST)
 
             # check whether it's valid:
             if form.is_valid():
+                restricted = form.cleaned_data['restricted']
+                ultra_restricted = form.cleaned_data['ultra_restricted']
+                if ultra_restricted:
+                    restricted = False
+                blacklisted = form.cleaned_data['blacklisted']
+                if restricted or ultra_restricted:
+                    blacklisted = False
+
                 EveNote.objects.create(eve_name=request.POST.get('eve_name'),
                                        eve_catagory=request.POST.get('eve_cat'),
-                                       blacklisted=form.cleaned_data['blacklisted'],
+                                       blacklisted=blacklisted,
+                                       restricted=restricted,
+                                       ultra_restricted=ultra_restricted,
                                        reason=form.cleaned_data['reason'],
                                        added_by=request.user.profile.main_character.character_name,
                                        eve_id=eve_id)
+
                 return redirect('toolbox:eve_note_board')
         else:
             c = esi_client_factory()
             name = c.Universe.post_universe_names(ids=[eve_id]).result()[0]
-            form = AddEveNote()
-            return render(request, 'toolbox/add_note.html', {'form':form, 'name': name})
+            form = EveNoteForm()
+            context = {'form':form,
+                       'name': name,
+                       'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes'),
+                       'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
+                       'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes')}
+
+            return render(request, 'toolbox/add_note.html', context)
     else:
         return render(request, 'toolbox/evenotes.html')
 
@@ -97,21 +136,37 @@ def add_note(request, eve_id=None):
 @permission_required('toolbox.add_new_eve_notes')
 def edit_note(request, note_id=None):
     if request.method == 'POST':
-        form = EditNote(request.POST)
+        form = EveNoteForm(request.POST)
 
         # check whether it's valid:
         if form.is_valid():
+            restricted = form.cleaned_data['restricted']
+            ultra_restricted = form.cleaned_data['ultra_restricted']
+            if ultra_restricted:
+                restricted = False
+            blacklisted = form.cleaned_data['blacklisted']
+            if restricted or ultra_restricted:
+                blacklisted = False
             jb = EveNote.objects.get(id=request.POST.get('note_id'))
             jb.reason = form.cleaned_data['reason']
-            jb.blacklisted = form.cleaned_data['blacklisted']
+            jb.blacklisted = blacklisted
+            jb.restricted = restricted
+            jb.ultra_restricted = ultra_restricted
             jb.save()
             messages.info(request, "Edit Successful")
             return redirect('toolbox:eve_note_board')
     else:
         note = EveNote.objects.get(pk=note_id)
-        form = EditNote(initial={'reason': note.reason,
-                                 'blacklisted': note.blacklisted})
-        return render(request, 'toolbox/edit_note.html', {'form': form, 'note': note})
+        form = EveNoteForm(initial={'reason': note.reason,
+                                    'blacklisted': note.blacklisted,
+                                    'restricted': note.restricted,
+                                    'ultra_restricted': note.ultra_restricted})
+        context = {'form': form,
+                   'note': note,
+                   'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes'),
+                   'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes')}
+
+        return render(request, 'toolbox/edit_note.html', context)
 
 
 @login_required

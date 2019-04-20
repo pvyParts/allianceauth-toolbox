@@ -5,9 +5,11 @@ class SearchEveName(forms.Form):
     name = forms.CharField(label='Name to Search for', max_length=500)
 
 
-class AddEveNote(forms.Form):
+class EveNoteForm(forms.Form):
     reason = forms.CharField(label='Reason', widget=forms.Textarea)
     blacklisted = forms.BooleanField(label='Blacklist', required=False)
+    restricted = forms.BooleanField(label='Restricted', required=False)
+    ultra_restricted = forms.BooleanField(label='Ultra Restricted', required=False)
 
 
 class AddComment(forms.Form):
@@ -16,8 +18,3 @@ class AddComment(forms.Form):
 
 class AddRestrictedComment(forms.Form):
     comment = forms.CharField(label='Comment', widget=forms.Textarea)
-
-
-class EditNote(forms.Form):
-    reason = forms.CharField(label='Reason', widget=forms.Textarea)
-    blacklisted = forms.BooleanField(label='Blacklist', required=False)

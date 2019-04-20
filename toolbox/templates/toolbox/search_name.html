@@ -6,9 +6,8 @@
 {% endblock extra_css %}
 
 {% block content %}
-
+<h4 class="text-center col-md-12">Search For Name</h4>
 {% if names %}
-<h4 class="text-center col-md-12">Search Resulta</h4>
 <p class="text-center col-md-12">Pick from below or search again!</p>
 <table class="table table-hover" id="searched-names">
     <thead>
@@ -20,7 +19,7 @@
     <tbody>
     {% for name in names %}
         <tr>
-            <td>{% evename_img name.id name.name name.category 32  %}</td>
+            <td>{% evename_img name.id name.name name.category 64  %}</td>
             <td>{{name.name}}</td>
             <td>{{name.category|title}}</td>
             <td><a class="btn btn-success" type="button"

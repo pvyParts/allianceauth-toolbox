@@ -17,14 +17,28 @@
     {% csrf_token %}
     <input type="hidden" name="eve_name" value="{{name.name}}" />
     <input type="hidden" name="eve_cat" value="{{name.category}}" />
+    {% if add_restricted_note %}
+    <h4 class="text-center">
+        {{ form.restricted.label_tag }}
+        {{ form.restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
+    {% if add_ultra_restricted_note %}
+    <h4 class="text-center">
+        {{ form.ultra_restricted.label_tag }}
+        {{ form.ultra_restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
     <p>
         {{ form.reason.label_tag }}
         {{ form.reason|addclass:'form-control' }}
     </p>
-    <p>
+    {% if add_blacklist %}
+    <h4 class="text-center">
         {{ form.blacklisted.label_tag }}
         {{ form.blacklisted|addclass:'form-check' }}
-    </p>
+    </h4>
+    {% endif %}
     <input type="submit" value="Submit" class="btn btn-primary">
 </form>
 {% endblock %}

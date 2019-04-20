@@ -10,20 +10,34 @@
 <h4 class="text-center col-md-12">Editing Pilot Log</h4>
 <p class="text-center col-md-12">Please ensure character below is correct!</p>
 <div class="text-center col-md-12">
-{% evename_img note.eve_id note.eve_name note.eve_catagory 128  %}
+{% evename_img note.eve_id note.eve_name note.eve_catagory 128 %}
 <h4>{{note.eve_name}}</h4>
 </div>
 <form action="/toolbox/edit_note/{{note.id}}/" method="post">
     {% csrf_token %}
     <input type="hidden" name="note_id" value="{{note.id}}" />
+    {% if add_restricted_note %}
+    <h4 class="text-center">
+        {{ form.restricted.label_tag }}
+        {{ form.restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
+    {% if add_ultra_restricted_note %}
+    <h4 class="text-center">
+        {{ form.ultra_restricted.label_tag }}
+        {{ form.ultra_restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
     <p>
         {{ form.reason.label_tag }}
         {{ form.reason|addclass:'form-control' }}
     </p>
-    <p>
+    {% if add_blacklist %}
+    <h4 class="text-center">
         {{ form.blacklisted.label_tag }}
         {{ form.blacklisted|addclass:'form-check' }}
-    </p>
+    </h4>
+    {% endif %}
     <input type="submit" value="Submit" class="btn btn-primary">
 </form>
 {% endblock %}

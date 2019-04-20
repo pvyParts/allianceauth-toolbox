@@ -7,7 +7,10 @@ class EveNote(models.Model):
     eve_name = models.CharField(max_length=500)
     _category_enum = Choices('alliance', 'character', 'corporation')
     eve_catagory = models.CharField(max_length=30, choices=_category_enum)
+
     blacklisted = models.BooleanField(default=False)
+    restricted = models.BooleanField(default=False)
+    ultra_restricted = models.BooleanField(default=False)
 
     added_by = models.CharField(max_length=500)
     added_at = models.DateTimeField(auto_now_add=True)
@@ -20,7 +23,12 @@ class EveNote(models.Model):
         permissions = (
             ('view_eve_notes', 'Can view all eve notes'),
             ('add_new_eve_notes', 'Can add new eve notes'),
-            ('view_eve_blacklist', 'Can View the Blacklist')
+            ('add_to_blacklist', 'Can add to Blacklist'),
+            ('view_eve_blacklist', 'Can View the Blacklist'),
+            ('view_restricted_eve_notes', 'Can View restricted eve notes'),
+            ('view_ultra_restricted_eve_notes', 'Can View ultra_restricted eve notes'),
+            ('add_restricted_eve_notes', 'Can Add restricted eve notes'),
+            ('add_ultra_restricted_eve_notes', 'Can Add ultra_restricted eve notes')
         )
 
 
@@ -30,7 +38,6 @@ class EveNoteComment(models.Model):
     comment = models.TextField()
     comment_date = models.DateTimeField(auto_now_add=True)
     restricted = models.BooleanField(default=False)
-
 
     def __str__(self):
         return "Comment on: %s added by: %s" % (self.eve_note.eve_name, self.added_by)

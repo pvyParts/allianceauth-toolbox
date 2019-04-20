@@ -21,11 +21,21 @@ Blacklist and note service for eve entities, with comments and edit capability.
 
 ### View / Access Perms
 
-`toolbox | eve note | Can view all eve notes` Can View the Pilot Log
+`toolbox | eve note | Can view all eve notes` Can View the Pilot Log with non restricted notes
+
+`toolbox | eve note | Can View restricted eve notes` Can View the Pilot Log with restricted notes
+
+`toolbox | eve note | Can View ultra_restricted eve notes` Can View the Pilot Log with ultra restricted notes
 
 `toolbox | eve note | Can add new eve notes` Can add/edit new/existing items to the Pilot Log
 
+`toolbox | eve note | Can Add restricted eve notes` Can add/edit new/existing restricted items to the Pilot Log
+
+`toolbox | eve note | Can Add ultra_restricted eve notes` Can add/edit new/existing ultra restricted items to the Pilot Log
+
 `toolbox | eve note | Can View the Blacklist` Can View the Blacklist 
+
+`toolbox | eve note | Can add to Blacklist` Can add to the Blacklist 
 
 `toolbox | eve note comment | Can view eve note comments` Can view comments to an entity in the Pilot Log
 
