@@ -14,7 +14,7 @@ class EveNoteForm(forms.Form):
 
 class AddComment(forms.Form):
     comment = forms.CharField(label='Comment', widget=forms.Textarea)
+    restricted = forms.BooleanField(label='Restricted', required=False)
+    ultra_restricted = forms.BooleanField(label='Ultra Restricted', required=False)
 
 
-class AddRestrictedComment(forms.Form):
-    comment = forms.CharField(label='Comment', widget=forms.Textarea)

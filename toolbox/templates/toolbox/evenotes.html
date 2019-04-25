@@ -27,6 +27,8 @@
                         <th class="text-center">Reason</th>
                         <th>Added By</th>
                         <th>Category</th>
+                        <th>Corporation</th>
+                        <th>Alliance</th>
                         <th></th>
                     </thead>
                     <tbody>
@@ -34,15 +36,16 @@
 
                         <tr>
                             <td class="text-center" style="vertical-align:middle;">{% evename_img note.eve_id note.eve_name note.eve_catagory 64  %}</td>
-                            <td class="text-center" style="vertical-align:middle;"><p>{{ note.eve_name }}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-danger">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
+                            <td class="text-center" style="vertical-align:middle;"><p>{{ note.eve_name }}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-warning">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_at|date:"Y-m-d H:i"}}</p><p>{{ note.added_at|naturaltime }}</p></td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_by }}</p></td>
-                            <td class="text-center" style="vertical-align:middle;"><p style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ note.reason }}</p>
-                            </td>
+                            <td class="text-center" style="vertical-align:middle;"><p style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ note.reason }}</p></td>
 
                             <!-- for filtering -->
                             <td class="text-center" style="vertical-align:middle;">{{ note.added_by }}</td>
                             <td class="text-center" style="vertical-align:middle;">{{ note.eve_catagory }}</td>
+                            <td class="text-center" style="vertical-align:middle;">{{ note.corporation_name }}</td>
+                            <td class="text-center" style="vertical-align:middle;">{{ note.alliance_name }}</td>
                             <td class="text-center" style="vertical-align:middle;">
                                 <div class="text-center">
                                     {% if view_comment or add_comment %}
@@ -57,9 +60,6 @@
                                     <a class="btn btn-primary fa fa-comment"
                                        type="button" href="{% url 'toolbox:add_comment' note.id %}" title="Add Comment">
                                     </a>{% endif %}
-                                    {% if add_restricted_comment %}
-                                    <a class="btn btn-danger fa fa-shield"
-                                       type="button" href="{% url 'toolbox:add_restricted_comment' note.id %}" title="Add Restricted Comment"></a>{% endif %}
                                 </div>
                             </td>
 
@@ -96,7 +96,12 @@
                     {% endif %}
                         {% if comment.restricted %}
                             {% if view_restricted_comment or add_restricted_comment %}
-                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }}) <span class="label label-danger fa fa-shield"> </span></p>
+                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }}) <span class="label label-warning fa fa-shield" title="Restricted"> </span></p>
+                                <p class="text-center" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ comment.comment }}</p>
+                            {% endif %}
+                        {% elif comment.ultra_restricted %}
+                            {% if view_ultra_restricted_comment or add_ultra_restricted_comment %}
+                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }}) <span class="label label-danger fa fa-shield" title="Ultra Restricted"> </span></p>
                                 <p class="text-center" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ comment.comment }}</p>
                             {% endif %}
                         {% else %}
@@ -132,13 +137,17 @@
 						idx: 5
                             },{
 						idx: 6
+                            },{
+						idx: 7
+                            },{
+						idx: 8
                             }],
                     bootstrap: true
             },
             "columnDefs": [
                 { "searchable": false, "targets": [0] },
                 { "sortable": false, "targets": [0,4] },
-                { "visible": false, "targets": [5, 6] }
+                { "visible": false, "targets": [5, 6, 7, 8] }
 
             ],
             "order": [

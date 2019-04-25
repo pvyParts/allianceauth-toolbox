@@ -11,6 +11,5 @@ urlpatterns = [
     url(r'^search_name/$', views.search_name, name='search_name'),
     url(r'^add_note/(?P<eve_id>(\d)*)/$', views.add_note, name='add_note'),
     url(r'^edit_note/(?P<note_id>(\d)*)/$', views.edit_note, name='edit_note'),
-    url(r'^add_comment/(?P<note_id>(\d)*)/$', views.add_comment, name='add_comment'),
-    url(r'^add_restricted_comment/(?P<note_id>(\d)*)/$', views.add_restricted_comment, name='add_restricted_comment'),
+    url(r'^add_comment/(?P<note_id>(\d)*)/$', views.add_comment, name='add_comment')
 ]

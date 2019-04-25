@@ -15,6 +15,18 @@
 </div>
 <form action="/toolbox/add_comment/{{note.id}}/" method="post">
     {% csrf_token %}
+    {% if add_restricted %}
+    <h4 class="text-center">
+        {{ form.restricted.label_tag }}
+        {{ form.restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
+    {% if add_ultra_restricted %}
+    <h4 class="text-center">
+        {{ form.ultra_restricted.label_tag }}
+        {{ form.ultra_restricted|addclass:'form-check' }}
+    </h4>
+    {% endif %}
     <p>
         {{ form.comment.label_tag }}
         {{ form.comment|addclass:'form-control' }}

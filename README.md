@@ -21,13 +21,17 @@ Blacklist and note service for eve entities, with comments and edit capability.
 
 ### View / Access Perms
 
+`toolbox | eve note | Can View own corps notes` Can View the Pilot Log with corp restricted notes
+
 `toolbox | eve note | Can view all eve notes` Can View the Pilot Log with non restricted notes
 
 `toolbox | eve note | Can View restricted eve notes` Can View the Pilot Log with restricted notes
 
 `toolbox | eve note | Can View ultra_restricted eve notes` Can View the Pilot Log with ultra restricted notes
 
-`toolbox | eve note | Can add new eve notes` Can add/edit new/existing items to the Pilot Log
+`toolbox | eve note | Can Add own corp members to notes` Can add/edit new/existing items to the Pilot Log as long as tehy are in the main characters corporation
+
+`toolbox | eve note | Can add new eve notes` Can add/edit new/existing items to the Pilot Log regardless of corp
 
 `toolbox | eve note | Can Add restricted eve notes` Can add/edit new/existing restricted items to the Pilot Log
 
@@ -44,6 +48,11 @@ Blacklist and note service for eve entities, with comments and edit capability.
 `toolbox | eve note comment | Can view restricted eve note comments` Can view restricted comments on an entity in the Pilot Log
 
 `toolbox | eve note comment | Can add new restricted comments to eve notes` Can add/view restricted comments to an entity in the Pilot Log
+
+`toolbox | eve note comment | Can view ultra restricted eve note comments` Can view ultra restricted comments on an entity in the Pilot Log
+
+`toolbox | eve note comment | Can add new ultra restricted comments to eve notes` Can add/view ultra restricted comments to an entity in the Pilot Log
+
 
 ### Model admin perms 
 

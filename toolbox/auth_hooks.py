@@ -11,7 +11,7 @@ class AllianceMenu(MenuItemHook):
                               navactive=['toolbox:eve_note_board'])
 
     def render(self, request):
-        if request.user.has_perm('toolbox.view_eve_notes'):
+        if request.user.has_perm('toolbox.view_eve_notes') or request.user.has_perm('toolbox.view_basic_eve_notes'):
             return MenuItemHook.render(self, request)
         return ''
 
