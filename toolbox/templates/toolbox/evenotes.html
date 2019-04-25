@@ -36,7 +36,8 @@
 
                         <tr>
                             <td class="text-center" style="vertical-align:middle;">{% evename_img note.eve_id note.eve_name note.eve_catagory 64  %}</td>
-                            <td class="text-center" style="vertical-align:middle;"><p>{{ note.eve_name }}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-warning">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
+                            <td class="text-center" style="vertical-align:middle;"><p>{{ note.eve_name }}
+                                {% if note.eve_catagory == 'character' %}<br>{{ note.corporation_name }} - {{ note.alliance_name }}{% endif %}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-warning">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_at|date:"Y-m-d H:i"}}</p><p>{{ note.added_at|naturaltime }}</p></td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_by }}</p></td>
                             <td class="text-center" style="vertical-align:middle;"><p style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ note.reason }}</p></td>
