@@ -26,5 +26,3 @@ def update_old_eve_notes():
             character.alliance_name = alliance_info.get('name')
 
         character.save()
-
-

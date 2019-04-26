@@ -6,7 +6,7 @@
 {% endblock extra_css %}
 
 {% block content %}
-<h4 class="text-center col-md-12">Search For Name</h4>
+<h1 class="text-center col-md-12">Search</h1>
 {% if names %}
 <p class="text-center col-md-12">Pick from below or search again!</p>
 <table class="table table-hover" id="searched-names">
@@ -29,15 +29,17 @@
     </tbody>
 </table>
 {% endif %}
-<form action="/toolbox/search_name/" method="post">
-    {% csrf_token %}
-    <p>
-        {{ form.name.label_tag }}
-        {{ form.name|addclass:'form-control' }}
-    </p>
+<div class="col-sm-offset-3 col-sm-6">
+    <form action="/toolbox/search_name/" method="post">
+        {% csrf_token %}
+        <p>
+            {{ form.name.label_tag }}
+            {{ form.name|addclass:'form-control' }}
+        </p>
 
-    <input type="submit" value="Submit" class="btn btn-primary">
-</form>
+        <input type="submit" value="Submit" class="btn btn-primary">
+    </form>
+</div>
 {% endblock %}
 {% block extra_javascript %}
     {% include 'bundles/datatables-js.html' %}

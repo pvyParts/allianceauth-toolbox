@@ -24,7 +24,7 @@
                         <th class="text-center">Name</th>
                         <th class="text-center">Date Added</th>
                         <th class="text-center">Added By</th>
-                        <th class="text-center">Reason</th>
+                        <th>Reason</th>
                         <th>Added By</th>
                         <th>Category</th>
                         <th>Corporation</th>
@@ -37,10 +37,10 @@
                         <tr>
                             <td class="text-center" style="vertical-align:middle;">{% evename_img note.eve_id note.eve_name note.eve_catagory 64  %}</td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.eve_name }}
-                                {% if note.eve_catagory == 'character' %}<br>{{ note.corporation_name }} - {{ note.alliance_name }}{% endif %}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-warning">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
+                                {% if note.eve_catagory == 'character' %}<br>{{ note.corporation_name }}</br>{{ note.alliance_name }}{% endif %}</p>{% if note.blacklisted %}<span class="label label-danger">BLACKLISTED</span>{% endif %}{% if note.restricted %}<span class="label label-warning">RESTRICTED</span>{% endif %}{% if note.ultra_restricted %}<span class="label label-danger">ULTRA-RESTRICTED</span>{% endif %}</td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_at|date:"Y-m-d H:i"}}</p><p>{{ note.added_at|naturaltime }}</p></td>
                             <td class="text-center" style="vertical-align:middle;"><p>{{ note.added_by }}</p></td>
-                            <td class="text-center" style="vertical-align:middle;"><p style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ note.reason }}</p></td>
+                            <td style="vertical-align:middle;"><p style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ note.reason }}</p></td>
 
                             <!-- for filtering -->
                             <td class="text-center" style="vertical-align:middle;">{{ note.added_by }}</td>
@@ -147,7 +147,7 @@
             },
             "columnDefs": [
                 { "searchable": false, "targets": [0] },
-                { "sortable": false, "targets": [0,4] },
+                { "sortable": false, "targets": [0,4,9] },
                 { "visible": false, "targets": [5, 6, 7, 8] }
 
             ],

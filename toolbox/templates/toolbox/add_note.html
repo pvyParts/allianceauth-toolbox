@@ -7,10 +7,10 @@
 
 {% block content %}
 
-<h4 class="text-center col-md-12">Creating New Pilot Log</h4>
+<h1 class="text-center col-md-12">Creating New Pilot Log</h1>
 <p class="text-center col-md-12">Please ensure the details below are correct!</p>
 {% if name.category == 'character' %}
-<div class="text-center col-md-12">
+<div class="text-center col-md-offset-3 col-md-6">
     <div class="text-center col-md-6">
         {% evename_img name.id name.name name.category 128 %}
         <h4>{{name.name}}</h4>
@@ -28,14 +28,15 @@
 </div>
 <div class="clearfix"></div>
 {% else %}
-<div class="text-center col-md-12">
-    <div class="text-center col-md-6">
+<div class="text-center col-md-offset-3 col-md-6">
+    <div class="text-center col-md-12">
         {% evename_img name.id name.name name.category 128 %}
         <h4>{{name.name}}</h4>
     </div>
 </div>
 <div class="clearfix"></div>
 {% endif %}
+<div class="col-sm-offset-3 col-sm-6">
 <form action="/toolbox/add_note/{{name.id}}/" method="post">
     {% csrf_token %}
     <input type="hidden" name="eve_name" value="{{name.name}}" />
@@ -50,14 +51,14 @@
     {% endif %}
     {% if add_restricted_note %}
     <h4 class="text-center">
-        {{ form.restricted.label_tag }}
-        {{ form.restricted|addclass:'form-check' }}
+        <span class="label label-warning">{{ form.restricted.label_tag }}
+        {{ form.restricted|addclass:'form-check' }}</span>
     </h4>
     {% endif %}
     {% if add_ultra_restricted_note %}
     <h4 class="text-center">
-        {{ form.ultra_restricted.label_tag }}
-        {{ form.ultra_restricted|addclass:'form-check' }}
+        <span class="label label-danger">{{ form.ultra_restricted.label_tag }}
+        {{ form.ultra_restricted|addclass:'form-check' }}</span>
     </h4>
     {% endif %}
     <p>
@@ -66,10 +67,11 @@
     </p>
     {% if add_blacklist %}
     <h4 class="text-center">
-        {{ form.blacklisted.label_tag }}
-        {{ form.blacklisted|addclass:'form-check' }}
+        <span class="label label-danger">{{ form.blacklisted.label_tag }}
+        {{ form.blacklisted|addclass:'form-check' }}</span>
     </h4>
     {% endif %}
     <input type="submit" value="Submit" class="btn btn-primary">
 </form>
+</div>
 {% endblock %}

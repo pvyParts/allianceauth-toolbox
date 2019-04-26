@@ -139,9 +139,11 @@ def add_note(request, eve_id=None):
             if form.is_valid():
                 restricted = form.cleaned_data['restricted']
                 ultra_restricted = form.cleaned_data['ultra_restricted']
+
                 if ultra_restricted:
                     restricted = False
                 blacklisted = form.cleaned_data['blacklisted']
+
                 if restricted or ultra_restricted:
                     blacklisted = False
 
@@ -242,6 +244,7 @@ def edit_note(request, note_id=None):
                                     'ultra_restricted': note.ultra_restricted})
         context = {'form': form,
                    'note': note,
+                   'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
                    'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes'),
                    'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes')}
 

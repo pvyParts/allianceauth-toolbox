@@ -2,7 +2,7 @@ from django import forms
 
 
 class SearchEveName(forms.Form):
-    name = forms.CharField(label='Name to Search for', max_length=500)
+    name = forms.CharField(label='Name to search ESI for', max_length=500)
 
 
 class EveNoteForm(forms.Form):
