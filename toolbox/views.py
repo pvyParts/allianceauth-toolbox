@@ -3,12 +3,25 @@ from django.contrib.auth.decorators import login_required, permission_required, 
 from django.contrib import messages
 from esi.clients import esi_client_factory
 
-from .models import EveNote, EveNoteComment
+from .models import EveNote, EveNoteComment, CharacterMining, CharacterMiningObservation, ApiKey, ApiKeyLog, CharacterPayment
 from .forms import SearchEveName, EveNoteForm, AddComment
-
+import json
 import logging
+from django.http import Http404, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+from django.db.models import FloatField, F, ExpressionWrapper
+from django.db.models import Subquery, OuterRef
+
+
+from allianceauth.eveonline.models import EveCharacter
 
 # Create your views here... *don't tell me what to do....*
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -280,3 +293,203 @@ def add_comment(request, note_id=None):
                    'add_ultra_restricted': request.user.has_perm('toolbox.add_new_eve_note_ultra_restricted_comments')}
 
         return render(request, 'toolbox/add_comment.html', context)
+
+
+@csrf_exempt
+def input_moon_api(request):
+    try:
+        if request.method == "POST":
+            api_tokens = list(ApiKey.objects.all().values_list('api_hash', flat=True))
+            if request.META['HTTP_X_API_TOKEN'] in api_tokens:
+                log = ApiKeyLog()
+                log.apikey = ApiKey.objects.get(api_hash = request.META['HTTP_X_API_TOKEN'])
+                data = request.body.decode('utf-8')
+                log.json = "%s" % (data,)
+                log.save()
+
+                received_json_data = json.loads(data)
+                month = received_json_data['month']
+                year = received_json_data['year']
+
+                for player, details in received_json_data['player_data'].items():
+                    character_ob, created = CharacterMining.objects.update_or_create(
+                                                character_id = details['char_id'],
+                                                character_name = player,
+                                                month = month,
+                                                year = year,
+                                                defaults = {
+                                                    'isk_total': details['totals_isk'],
+                                                    'tax_total': details['tax_isk']
+                                                    }
+                                            )
+
+                    for ore, ore_details in details['ores'].items():
+                        CharacterMiningObservation.objects.update_or_create(
+                            character = character_ob,
+                            ore_name=ore,
+                            ore_type =ore_details['type_id'],
+                            defaults={
+                                'count':ore_details['count'],
+                                'value':ore_details['value']
+                            }
+                        )
+
+                return HttpResponse('OK')
+            else:
+                raise Http404
+        else:
+            raise Http404
+    except:
+        logging.exception("Messsage")
+        raise Http404
+
+@csrf_exempt
+def input_wallet_api(request):
+    try:
+        if request.method == "POST":
+            api_tokens = list(ApiKey.objects.all().values_list('api_hash', flat=True))
+            if request.META['HTTP_X_API_TOKEN'] in api_tokens:
+                log = ApiKeyLog()
+                log.apikey = ApiKey.objects.get(api_hash = request.META['HTTP_X_API_TOKEN'])
+                data = request.body.decode('utf-8')
+                log.json = "%s" % (data,)
+                log.save()
+
+                received_json_data = json.loads(data)
+                all_trans_ids = set(CharacterPayment.objects.all().values_list('trans_id', flat=True))
+                for details in received_json_data:
+                    if details['trans_id'] not in all_trans_ids:
+                        CharacterPayment.objects.update_or_create(
+                            character_id = details['char_id'],
+                            character_name = details['name'],
+                            amount = details['amount'],
+                            trans_id = details['trans_id'],
+                            date = details['date'],
+                        )
+
+                return HttpResponse('OK')
+            else:
+                raise Http404
+        else:
+            raise Http404
+    except:
+        logging.exception("Messsage")
+        raise Http404
+
+
+@login_required
+@permission_required('toolbox.view_charactermining')
+def view_character_mining(request, character_id=None):
+    if character_id is None:
+        character = request.user.profile.main_character
+    else:
+        character = EveCharacter.objects.get(character_id=character_id).character_ownership.user.profile.main_character
+    character_list = character.character_ownership.user.character_ownerships.all().select_related('character')
+    character_ids = set(character_list.values_list('character__character_id', flat=True))
+    all_payments = CharacterPayment.objects.filter(character_id__in=character_ids).aggregate(total_isk=Coalesce(Sum('amount'),0))['total_isk']
+    all_mining_chars = CharacterMining.objects.filter(character_id__in=character_ids)\
+        .values('character_id')\
+        .annotate(
+            total_tax=Sum('tax_total')
+        ).annotate(
+            total_isk=Sum('isk_total')
+        ).annotate(
+            character_name=F('character_name')
+        )
+    all_obs = CharacterMiningObservation.objects.filter(character__character_id__in=character_ids)
+    total_tax = all_mining_chars.aggregate(total_taxes=Coalesce(Sum('tax_total'),0))['total_taxes']
+    total_isk = all_mining_chars.aggregate(total_isk=Coalesce(Sum('isk_total'),0))['total_isk']
+    char_breakdown = {}
+    for ob in all_obs:
+        if ob.character.character_name in char_breakdown:
+            if ob.ore_name in char_breakdown[ob.character.character_name]['ores']:
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = char_breakdown[ob.character.character_name]['ores'][ob.ore_name] + ob.value
+            else:
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = ob.value
+        else:
+            char_breakdown[ob.character.character_name]= {}
+            char_breakdown[ob.character.character_name]['id'] = ob.character.character_id
+            char_breakdown[ob.character.character_name]['ores'] = {}
+            char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = ob.value
+
+
+    context = {'characters': all_mining_chars,
+               'all_obs': char_breakdown,
+               'char_list': character_list,
+               'total_tax': total_tax,
+               'total_isk': total_isk,
+               'all_payments':all_payments
+               }
+
+    return render(request, 'toolbox/character_mining.html', context)
+
+
+@login_required
+@permission_required('toolbox.change_charactermining')
+def admin_character_mining(request):
+    all_mining_char_ids = set(CharacterMining.objects.all().values_list('character_id', flat=True))
+
+    linked_chars = EveCharacter.objects.filter(character_id__in=all_mining_char_ids)\
+        .select_related('character_ownership', 'character_ownership__user__profile__main_character')\
+        .prefetch_related('character_ownership__user__character_ownerships')\
+        .annotate(
+            total_payments=Coalesce(
+                Subquery(
+                    CharacterPayment.objects.filter(
+                        character_id=OuterRef('character_id'))
+                        .values('amount')
+                        .annotate(total_isks=Sum('amount'))
+                        .values('total_isks')[:1]
+                )
+            ,0
+            )
+        ).annotate(
+            total_tax=Coalesce(
+                Subquery(
+                    CharacterMining.objects.filter(
+                        character_id=OuterRef('character_id'))
+                        .values('tax_total')
+                        .annotate(tax_totals=Sum('tax_total'))
+                        .values('tax_totals')[:1]
+                )
+            ,0
+            )
+        )
+
+    linked_char_breakdown = {}
+    linked_ids = []
+    for ob in linked_chars:
+        try:
+            main = ob.character_ownership.user.profile.main_character
+            if main.character_name in linked_char_breakdown:
+                linked_char_breakdown[main.character_name]['total_tax'] += int(ob.total_tax)
+                linked_char_breakdown[main.character_name]['total_payments'] += ob.total_payments
+            else:
+                linked_char_breakdown[main.character_name]= {}
+                linked_char_breakdown[main.character_name]['id'] = main.character_id
+                linked_char_breakdown[main.character_name]['corp'] = main.corporation_name
+                linked_char_breakdown[main.character_name]['alliance'] = main.alliance_name
+                linked_char_breakdown[main.character_name]['total_tax'] = int(ob.total_tax)
+                linked_char_breakdown[main.character_name]['total_payments'] = ob.total_payments
+            linked_ids.append(ob.character_id)
+
+        except:
+            pass #crappy character
+
+    unlinked_chars = CharacterMining.objects.exclude(
+        character_id__in=linked_ids) \
+        .values('character_id')\
+        .annotate(
+            total_tax=Sum('tax_total')
+        ).annotate(
+            character_name=F('character_name')
+        )
+
+    context = {
+               'linked_char_breakdown': linked_char_breakdown,
+               'unlinked_char_breakdown': unlinked_chars
+               }
+
+    return render(request, 'toolbox/character_mining_admin.html', context)
+
+

@@ -29,6 +29,39 @@ class BlacklistMenu(MenuItemHook):
         return ''
 
 
+class TaxMenu(MenuItemHook):
+    def __init__(self):
+        MenuItemHook.__init__(self, 'Moon Taxes',
+                              'fa fa-moon-o fa-fw',
+                              'toolbox:view_character_mining',
+                              navactive=['toolbox:view_character_mining'])
+
+    def render(self, request):
+        if request.user.has_perm('toolbox.view_charactermining'):
+            return MenuItemHook.render(self, request)
+        return ''
+
+class TaxAdminMenu(MenuItemHook):
+    def __init__(self):
+        MenuItemHook.__init__(self, 'Moon Tax Admin',
+                              'fa fa-moon-o fa-fw',
+                              'toolbox:admin_character_mining',
+                              navactive=['toolbox:admin_character_mining'])
+
+    def render(self, request):
+        if request.user.has_perm('toolbox.change_charactermining'):
+            return MenuItemHook.render(self, request)
+        return ''
+
+
+@hooks.register('menu_item_hook')
+def register_menu():
+    return TaxMenu()
+
+@hooks.register('menu_item_hook')
+def register_menu():
+    return TaxAdminMenu()
+
 @hooks.register('menu_item_hook')
 def register_menu():
     return AllianceMenu()

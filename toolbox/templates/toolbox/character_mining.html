@@ -1,0 +1,148 @@
+{% extends 'toolbox/base.html' %}
+{% load i18n %}
+{% load humanize %}
+{% block tb_block %}
+</br>
+<h1 class="text-center">Mining Taxes</h1>
+<div class="col-sm-4">
+    <div class="panel panel-default" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Linked Characters</h3></div>
+            <div class="panel-body">{% for char in char_list|slice:":10" %} <span class="badge badge-light">{{ char.character.character_name }}</span>{% endfor %}
+                {% if char_list.count > 10 %} <span class="badge badge-success">And {{ char_list.count|subtract:10 }} More...</span>{% endif %}
+        </div>
+    </div>
+</div>
+<div class="col-sm-4">
+    <div class="panel panel-primary" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Mined</h3></div>
+            <div class="panel-body"><h3 class="text-center">Ƶ {{total_isk|intcomma }}</h3>
+        </div>
+    </div>
+</div>
+<div class="col-sm-4">
+    <div class="panel {% if total_tax|subtract:all_payments < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Tax Owing</h3></div>
+            <div class="panel-body">{% if total_tax|subtract:all_payments < 10 %}
+                <h4 class="text-center">No Payment Required</h4> <h5 class="text-center">Ƶ {{total_tax|subtract:all_payments|intcomma }}</h5>
+            {% else %}
+                <h3 class="text-center">Ƶ {{total_tax|subtract:all_payments|intcomma }}</h3>{% endif %}
+        </div>
+    </div>
+</div>
+<div class="clearfix"></div>
+<div class="col-sm-6">
+    <div class="panel panel-primary" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Character Tax Breakdowns</h3></div>
+        <div class="panel-body">
+            {% if characters %}
+            <div class="container col-xs-12">
+                <table class="table table-striped" width="100%" id="characters-table">
+                        <thead>
+                            <th class="text-center"></th>
+                            <th class="text-center">Name</th>
+                            <th class="text-center">Total Mined</th>
+                            <th class="text-center">Total Tax</th>
+                        </thead>
+                        <tbody>
+                        {% for char in characters %}
+                            <tr>
+                                <td class="text-center" style="vertical-align:middle;">{% evename_img char.character_id char.character_name "character" 32  %}</td>
+                                <td class="text-center" style="vertical-align:middle;">{{ char.character_name }}</td>
+                                <td class="text-center" style="vertical-align:middle;">{{ char.total_isk|intcomma }}</td>
+                                <td class="text-center" style="vertical-align:middle;">{{ char.total_tax|intcomma }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <h4 class="text-center">Nothing Found</h4>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="col-sm-6">
+    <div class="panel panel-primary" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Character Mining Breakdowns</h3></div>
+        <div class="panel-body">
+
+        {% if all_obs %}
+        <div class="container col-xs-12">
+            <table class="table table-striped" width="100%" id="ob-table">
+                    <thead>
+                        <th class="text-center"></th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Ore</th>
+                    </thead>
+                    <tbody>
+                    {% for name, ob in all_obs.items %}
+                        <tr>
+                            <td class="text-center" style="vertical-align:middle;">{% evename_img ob.id ob.name "character" 32  %}</td>
+                            <td class="text-center" style="vertical-align:middle;">{{ name }}</td>
+                            <td class="text-center" style="vertical-align:middle;">
+                                <table class="table table-striped" width="100%" id="{{ob.id}}-ore">
+                                    <thead>
+                                        <th class="text-center">Ore</th>
+                                        <th class="text-center">Value</th>
+                                    </thead>
+                                    <tbody>
+                                    {% for ore_name, ore_details in ob.ores.items %}
+                                        <tr>
+                                            <td>{{ore_name}}</td>
+                                            <td>{{ore_details|intcomma }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <h4 class="text-center">Nothing Found</h4>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_javascript %}
+    {% include 'bundles/datatables-js.html' %}
+{% endblock %}
+{% block extra_script %}
+    $(document).ready(function() {
+        $('#characters-table').DataTable({
+            "columnDefs": [
+                { "sortable": false, "targets": [0] },
+            ],
+            "order": [
+                [1, "asc"]
+            ],
+            "responsive" : true
+        });
+        $('#ob-table').DataTable({
+            "columnDefs": [
+                { "sortable": false, "targets": [0,2] },
+            ],
+            "order": [
+                [1, "asc"]
+            ],
+            "responsive" : true
+        });
+        {% if all_obs %}
+            {% for name, ob in all_obs.items %}
+                $('#{{ob.id}}-ore').DataTable({
+                            "searching": false,
+                            "paging": false,
+                            "info": false,
+                            "order": [[ 1, "desc" ]],
+                            bootstrap: true,
+                });
+            {% endfor %}
+        {% endif %}
+
+    });
+
+{% endblock %}

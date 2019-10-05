@@ -63,3 +63,38 @@ class EveNoteComment(models.Model):
             ('add_new_eve_note_ultra_restricted_comments', 'Can add new ultra restricted comments to eve notes'),
         )
 
+
+class ApiKey(models.Model):
+    api_hash = models.CharField(max_length=255, null=True, default=None, unique=True)
+    name = models.CharField(max_length=255, null=True, default=None)
+
+
+class ApiKeyLog(models.Model):
+    apikey = models.ForeignKey(ApiKey, on_delete=models.CASCADE)
+    json = models.TextField(null=True, default=None)
+    date_accessed = models.DateTimeField(auto_now=True)
+
+
+class CharacterMining(models.Model):
+    character_id = models.BigIntegerField()
+    character_name = models.CharField(max_length=500)
+    last_update = models.DateTimeField(auto_now_add=True)
+    month = models.IntegerField()
+    year = models.IntegerField()
+    isk_total = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
+    tax_total = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
+
+
+class CharacterMiningObservation(models.Model):
+    character = models.ForeignKey(CharacterMining, on_delete=models.CASCADE)
+    ore_name = models.CharField(max_length=500)
+    ore_type = models.IntegerField()
+    count = models.IntegerField()
+    value = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
+
+class CharacterPayment(models.Model):
+    character_id = models.BigIntegerField()
+    character_name = models.CharField(max_length=500)
+    amount = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
+    date = models.DateTimeField()
+    trans_id = models.BigIntegerField()
