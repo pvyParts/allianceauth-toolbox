@@ -427,9 +427,8 @@ def view_character_mining(request, character_id=None):
 @login_required
 @permission_required('toolbox.change_charactermining')
 def admin_character_mining(request):
-    all_mining_char_ids = set(CharacterMining.objects.all().values_list('character_id', flat=True))
 
-    linked_chars = EveCharacter.objects.filter(character_id__in=all_mining_char_ids)\
+    linked_chars = EveCharacter.objects.all()\
         .select_related('character_ownership', 'character_ownership__user__profile__main_character')\
         .prefetch_related('character_ownership__user__character_ownerships')\
         .annotate(
@@ -458,20 +457,24 @@ def admin_character_mining(request):
 
     linked_char_breakdown = {}
     linked_ids = []
+    total_owed_tax = 0
     for ob in linked_chars:
         try:
-            main = ob.character_ownership.user.profile.main_character
-            if main.character_name in linked_char_breakdown:
-                linked_char_breakdown[main.character_name]['total_tax'] += int(ob.total_tax)
-                linked_char_breakdown[main.character_name]['total_payments'] += ob.total_payments
-            else:
-                linked_char_breakdown[main.character_name]= {}
-                linked_char_breakdown[main.character_name]['id'] = main.character_id
-                linked_char_breakdown[main.character_name]['corp'] = main.corporation_name
-                linked_char_breakdown[main.character_name]['alliance'] = main.alliance_name
-                linked_char_breakdown[main.character_name]['total_tax'] = int(ob.total_tax)
-                linked_char_breakdown[main.character_name]['total_payments'] = ob.total_payments
+            if int(ob.total_tax) > 1 or ob.total_payments > 0:
+                main = ob.character_ownership.user.profile.main_character
+                if main.character_name in linked_char_breakdown:
+                    linked_char_breakdown[main.character_name]['total_tax'] += int(ob.total_tax)
+                    linked_char_breakdown[main.character_name]['total_payments'] += ob.total_payments
+                else:
+                    linked_char_breakdown[main.character_name]= {}
+                    linked_char_breakdown[main.character_name]['id'] = main.character_id
+                    linked_char_breakdown[main.character_name]['corp'] = main.corporation_name
+                    linked_char_breakdown[main.character_name]['alliance'] = main.alliance_name
+                    linked_char_breakdown[main.character_name]['total_tax'] = int(ob.total_tax)
+                    linked_char_breakdown[main.character_name]['total_payments'] = ob.total_payments
             linked_ids.append(ob.character_id)
+
+            total_owed_tax += (int(ob.total_tax) - ob.total_payments)
 
         except:
             pass #crappy character
@@ -485,10 +488,14 @@ def admin_character_mining(request):
             character_name=F('character_name')
         )
 
+    total_unlinked_isk = unlinked_chars.aggregate(Sum('total_tax'))
+
     context = {
                'linked_char_breakdown': linked_char_breakdown,
-               'unlinked_char_breakdown': unlinked_chars
-               }
+               'unlinked_char_breakdown': unlinked_chars,
+               'total_owed_tax': total_owed_tax,
+               'total_unlinked_isk': total_unlinked_isk
+    }
 
     return render(request, 'toolbox/character_mining_admin.html', context)
 

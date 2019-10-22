@@ -4,6 +4,23 @@
 {% block tb_block %}
 </br>
 <h1 class="text-center">Mining Tax Admin</h1>
+<div class="col-sm-6">
+    <div class="panel {% if total_owed_tax < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Tax Owing</h3></div>
+            <div class="panel-body">
+                <h3 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h3>
+        </div>
+    </div>
+</div>
+<div class="col-sm-6">
+    <div class="panel {% if total_unlinked_isk < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Unlinked Character Tax Owing</h3></div>
+            <div class="panel-body">
+                <h3 class="text-center">Ƶ {{total_unlinked_isk.total_tax__sum|intcomma }}</h3>
+        </div>
+    </div>
+</div>
+
 <div class="col-sm-12">
     <div class="panel panel-primary" >
         <div class="panel-heading text-center"><h3 class="panel-title">Character Tax Breakdowns</h3></div>
@@ -38,6 +55,7 @@
         </div>
     </div>
 </div>
+
 <div class="col-sm-12">
     <div class="panel panel-danger" >
         <div class="panel-heading text-center"><h3 class="panel-title">Unlinked Character Tax Breakdowns</h3></div>
