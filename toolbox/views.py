@@ -378,7 +378,7 @@ def input_wallet_api(request):
 
 
 @login_required
-@permission_required('toolbox.view_charactermining')
+@permission_required('toolbox.view_own_character_mining')
 def view_character_mining(request, character_id=None):
     if character_id is None:
         character = request.user.profile.main_character
