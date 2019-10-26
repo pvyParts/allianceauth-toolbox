@@ -383,7 +383,11 @@ def view_character_mining(request, character_id=None):
     if character_id is None:
         character = request.user.profile.main_character
     else:
-        character = EveCharacter.objects.get(character_id=character_id).character_ownership.user.profile.main_character
+        if request.user.has_perm('toolbox.admin_alliance_mining'):
+            character = EveCharacter.objects.get(character_id=character_id).character_ownership.user.profile.main_character
+        else:
+            character = request.user.profile.main_character
+
     character_list = character.character_ownership.user.character_ownerships.all().select_related('character')
     character_ids = set(character_list.values_list('character__character_id', flat=True))
     all_payments = CharacterPayment.objects.filter(character_id__in=character_ids).aggregate(total_isk=Coalesce(Sum('amount'),0))['total_isk']
@@ -425,7 +429,7 @@ def view_character_mining(request, character_id=None):
 
 
 @login_required
-@permission_required('toolbox.change_charactermining')
+@permission_required('toolbox.admin_alliance_mining')
 def admin_character_mining(request):
 
     linked_chars = EveCharacter.objects.all()\

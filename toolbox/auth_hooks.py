@@ -37,7 +37,7 @@ class TaxMenu(MenuItemHook):
                               navactive=['toolbox:view_character_mining'])
 
     def render(self, request):
-        if request.user.has_perm('toolbox.view_charactermining'):
+        if request.user.has_perm('toolbox.view_own_character_mining'):
             return MenuItemHook.render(self, request)
         return ''
 
@@ -49,7 +49,7 @@ class TaxAdminMenu(MenuItemHook):
                               navactive=['toolbox:admin_character_mining'])
 
     def render(self, request):
-        if request.user.has_perm('toolbox.change_charactermining'):
+        if request.user.has_perm('toolbox.admin_alliance_mining'):
             return MenuItemHook.render(self, request)
         return ''
 

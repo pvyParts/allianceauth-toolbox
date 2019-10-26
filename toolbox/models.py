@@ -84,6 +84,12 @@ class CharacterMining(models.Model):
     isk_total = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
     tax_total = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
 
+    class Meta:
+        permissions = (
+            ('view_own_character_mining', 'Can View Personal Mining Taxes'),
+            ('admin_alliance_mining', 'Can View all Ledger Data'),
+        )
+
 
 class CharacterMiningObservation(models.Model):
     character = models.ForeignKey(CharacterMining, on_delete=models.CASCADE)
