@@ -14,9 +14,10 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.db.models import FloatField, F, ExpressionWrapper
 from django.db.models import Subquery, OuterRef
+from django.utils.dateparse import parse_datetime
 
-
-from allianceauth.eveonline.models import EveCharacter
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from allianceauth.timerboard.models import Timer
 
 # Create your views here... *don't tell me what to do....*
 import logging
@@ -342,6 +343,41 @@ def input_moon_api(request):
     except:
         logging.exception("Messsage")
         raise Http404
+
+
+@csrf_exempt
+def input_timer_api(request):
+    try:
+        if request.method == "POST":
+            api_tokens = list(ApiKey.objects.all().values_list('api_hash', flat=True))
+            if request.META['HTTP_X_API_TOKEN'] in api_tokens:
+                log = ApiKeyLog()
+                log.apikey = ApiKey.objects.get(api_hash = request.META['HTTP_X_API_TOKEN'])
+                data = request.body.decode('utf-8')
+                log.json = "%s" % (data,)
+                log.save()
+
+                received_json_data = json.loads(data)
+
+                Timer.objects.create(
+                    details=received_json_data.get("details", ""),
+                    system=received_json_data.get("system", ""),
+                    planet_moon=received_json_data.get("planet_moon", ""),
+                    structure=received_json_data.get("structure", ""),
+                    objective="Friendly",
+                    eve_time=parse_datetime(received_json_data.get("eve_time")),
+                    eve_corp=EveCorporationInfo.objects.get(corporation_id=1639878825)
+                )
+
+                return HttpResponse('OK')
+            else:
+                raise Http404
+        else:
+            raise Http404
+    except:
+        logging.exception("Messsage")
+        raise Http404
+
 
 @csrf_exempt
 def input_wallet_api(request):

@@ -25,8 +25,10 @@
             <div class="panel-body">{% if total_tax|subtract:all_payments < 10 %}
                 <h4 class="text-center">No Payment Required</h4> <h5 class="text-center">Ƶ {{total_tax|subtract:all_payments|intcomma }}</h5>
             {% else %}
-                <h3 class="text-center">Ƶ {{total_tax|subtract:all_payments|intcomma }}</h3>{% endif %}
-        </div>
+                <h3 class="text-center">Ƶ {{total_tax|subtract:all_payments|intcomma }}</h3>
+                <p class="text-center text-muted"><small>Mining Payments are to be made to <a href="https://evewho.com/corporation/98609787">Initiative Trust</a><br>All payments made to other places will not be receipted!</small></p>
+            {% endif %}
+            </div>
     </div>
 </div>
 <div class="clearfix"></div>
