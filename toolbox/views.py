@@ -490,9 +490,10 @@ def admin_character_mining(request):
                                         Subquery(
                                             CharacterPayment.objects.filter(
                                                 character_id=OuterRef('character_id'))
-                                                .values('amount')
+                                                .order_by()
+                                                .values('character_id')
                                                 .annotate(total_isks=Sum('amount'))
-                                                .values('total_isks')[:1]
+                                                .values('total_isks')
                                         )
                                     ,0
                                     )
@@ -501,9 +502,10 @@ def admin_character_mining(request):
                                         Subquery(
                                             CharacterMining.objects.filter(
                                                 character_id=OuterRef('character_id'))
-                                                .values('tax_total')
+                                                .order_by()
+                                                .values('character_id')
                                                 .annotate(tax_totals=Sum('tax_total'))
-                                                .values('tax_totals')[:1]
+                                                .values('tax_totals')
                                         )
                                     ,0
                                     )
