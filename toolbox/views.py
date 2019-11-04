@@ -8,6 +8,7 @@ from .forms import SearchEveName, EveNoteForm, AddComment
 import json
 import logging
 from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_exempt
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Sum
@@ -426,7 +427,8 @@ def view_character_mining(request, character_id=None):
 
     character_list = character.character_ownership.user.character_ownerships.all().select_related('character')
     character_ids = set(character_list.values_list('character__character_id', flat=True))
-    all_payments = CharacterPayment.objects.filter(character_id__in=character_ids).aggregate(total_isk=Coalesce(Sum('amount'),0))['total_isk']
+    all_payment = CharacterPayment.objects.filter(character_id__in=character_ids)
+    all_payments = all_payment.aggregate(total_isk=Coalesce(Sum('amount'),0))['total_isk']
     all_mining_chars = CharacterMining.objects.filter(character_id__in=character_ids)\
         .values('character_id')\
         .annotate(
@@ -443,14 +445,19 @@ def view_character_mining(request, character_id=None):
     for ob in all_obs:
         if ob.character.character_name in char_breakdown:
             if ob.ore_name in char_breakdown[ob.character.character_name]['ores']:
-                char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = char_breakdown[ob.character.character_name]['ores'][ob.ore_name] + ob.value
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["value"] = char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["value"] + ob.value
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["count"] = char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["count"] + ob.count
             else:
-                char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = ob.value
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = {}
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["value"] = ob.value
+                char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["count"] = ob.count
         else:
             char_breakdown[ob.character.character_name]= {}
             char_breakdown[ob.character.character_name]['id'] = ob.character.character_id
             char_breakdown[ob.character.character_name]['ores'] = {}
-            char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = ob.value
+            char_breakdown[ob.character.character_name]['ores'][ob.ore_name] = {}
+            char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["value"] = ob.value
+            char_breakdown[ob.character.character_name]['ores'][ob.ore_name]["count"] = ob.count
 
 
     context = {'characters': all_mining_chars,
@@ -458,66 +465,77 @@ def view_character_mining(request, character_id=None):
                'char_list': character_list,
                'total_tax': total_tax,
                'total_isk': total_isk,
-               'all_payments':all_payments
+               'all_payments':all_payments,
+               'all_payment': all_payment
                }
 
     return render(request, 'toolbox/character_mining.html', context)
 
 
 @login_required
-@permission_required('toolbox.admin_alliance_mining')
 def admin_character_mining(request):
+    if request.user.has_perm('toolbox.admin_alliance_mining'):
+        linked_chars = EveCharacter.objects.filter(character_ownership__isnull=False)
+    elif request.user.has_perm('toolbox.admin_corporation_mining'):
+        linked_chars = EveCharacter.objects.filter(character_ownership__isnull=False,
+                        character_ownership__user__profile__main_character__corporation_id=request.user.profile.main_character.corporation_id)
+    else:
+        raise PermissionDenied('You do not have permission to be here. This has been Logged!')
 
-    linked_chars = EveCharacter.objects.all()\
-        .select_related('character_ownership', 'character_ownership__user__profile__main_character')\
-        .prefetch_related('character_ownership__user__character_ownerships')\
-        .annotate(
-            total_payments=Coalesce(
-                Subquery(
-                    CharacterPayment.objects.filter(
-                        character_id=OuterRef('character_id'))
-                        .values('amount')
-                        .annotate(total_isks=Sum('amount'))
-                        .values('total_isks')[:1]
-                )
-            ,0
-            )
-        ).annotate(
-            total_tax=Coalesce(
-                Subquery(
-                    CharacterMining.objects.filter(
-                        character_id=OuterRef('character_id'))
-                        .values('tax_total')
-                        .annotate(tax_totals=Sum('tax_total'))
-                        .values('tax_totals')[:1]
-                )
-            ,0
-            )
-        )
+
+    linked_chars = linked_chars.select_related('character_ownership', 'character_ownership__user__profile__main_character')\
+                                .prefetch_related('character_ownership__user__character_ownerships')\
+                                .annotate(
+                                    total_payments=Coalesce(
+                                        Subquery(
+                                            CharacterPayment.objects.filter(
+                                                character_id=OuterRef('character_id'))
+                                                .values('amount')
+                                                .annotate(total_isks=Sum('amount'))
+                                                .values('total_isks')[:1]
+                                        )
+                                    ,0
+                                    )
+                                ).annotate(
+                                    total_tax=Coalesce(
+                                        Subquery(
+                                            CharacterMining.objects.filter(
+                                                character_id=OuterRef('character_id'))
+                                                .values('tax_total')
+                                                .annotate(tax_totals=Sum('tax_total'))
+                                                .values('tax_totals')[:1]
+                                        )
+                                    ,0
+                                    )
+                                ).values('character_id',
+                                         'total_tax',
+                                         'total_payments',
+                                         'character_ownership__user__profile__main_character__character_id',
+                                         'character_ownership__user__profile__main_character__character_name',
+                                         'character_ownership__user__profile__main_character__corporation_name',
+                                         'character_ownership__user__profile__main_character__alliance_name'
+                                         )
 
     linked_char_breakdown = {}
     linked_ids = []
     total_owed_tax = 0
     for ob in linked_chars:
-        try:
-            if int(ob.total_tax) > 1 or ob.total_payments > 0:
-                main = ob.character_ownership.user.profile.main_character
-                if main.character_name in linked_char_breakdown:
-                    linked_char_breakdown[main.character_name]['total_tax'] += int(ob.total_tax)
-                    linked_char_breakdown[main.character_name]['total_payments'] += ob.total_payments
-                else:
-                    linked_char_breakdown[main.character_name]= {}
-                    linked_char_breakdown[main.character_name]['id'] = main.character_id
-                    linked_char_breakdown[main.character_name]['corp'] = main.corporation_name
-                    linked_char_breakdown[main.character_name]['alliance'] = main.alliance_name
-                    linked_char_breakdown[main.character_name]['total_tax'] = int(ob.total_tax)
-                    linked_char_breakdown[main.character_name]['total_payments'] = ob.total_payments
-            linked_ids.append(ob.character_id)
+        if int(ob['total_tax']) > 1 or ob['total_payments'] > 0:
+            main = ob['character_ownership__user__profile__main_character__character_name']
+            if main in linked_char_breakdown:
+                linked_char_breakdown[main]['total_tax'] += int(ob['total_tax'])
+                linked_char_breakdown[main]['total_payments'] += ob['total_payments']
+            else:
+                linked_char_breakdown[main]= {}
+                linked_char_breakdown[main]['id'] = ob['character_ownership__user__profile__main_character__character_id']
+                linked_char_breakdown[main]['corp'] = ob['character_ownership__user__profile__main_character__corporation_name']
+                linked_char_breakdown[main]['alliance'] = ob['character_ownership__user__profile__main_character__alliance_name']
+                linked_char_breakdown[main]['total_tax'] = int(ob['total_tax'])
+                linked_char_breakdown[main]['total_payments'] = ob['total_payments']
+        linked_ids.append(ob['character_id'])
 
-            total_owed_tax += (int(ob.total_tax) - ob.total_payments)
+        total_owed_tax += (int(ob['total_tax']) - ob['total_payments'])
 
-        except:
-            pass #crappy character
 
     unlinked_chars = CharacterMining.objects.exclude(
         character_id__in=linked_ids) \

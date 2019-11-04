@@ -88,6 +88,8 @@ class CharacterMining(models.Model):
         permissions = (
             ('view_own_character_mining', 'Can View Personal Mining Taxes'),
             ('admin_alliance_mining', 'Can View all Ledger Data'),
+            ('admin_corporation_mining', 'Can View Own Corps Ledger Data'),
+
         )
 
 

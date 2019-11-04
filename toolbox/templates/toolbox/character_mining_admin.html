@@ -5,23 +5,78 @@
 {% block tb_block %}
 </br>
 <h1 class="text-center">Mining Tax Admin</h1>
+{% if perms.toolbox.admin_alliance_mining %}
 <div class="col-sm-6">
     <div class="panel {% if total_owed_tax < 10 %}panel-success{% else %}panel-warning{% endif %}" >
         <div class="panel-heading text-center"><h3 class="panel-title">Total Tax Owing</h3></div>
-            <div class="panel-body">
+            <div class="panel-body">{% if total_owed_tax < 10 %}
+                <h4 class="text-center">No Payment Required</h4> <h5 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h5>
+            {% else %}
                 <h3 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h3>
-        </div>
-    </div>
-</div>
-<div class="col-sm-6">
-    <div class="panel {% if total_unlinked_isk < 10 %}panel-success{% else %}panel-warning{% endif %}" >
-        <div class="panel-heading text-center"><h3 class="panel-title">Total Unlinked Character Tax Owing</h3></div>
-            <div class="panel-body">
-                <h3 class="text-center">Ƶ {{total_unlinked_isk.total_tax__sum|intcomma }}</h3>
+                <p class="text-center text-muted"><small>Mining Payments are to be made to <a href="https://evewho.com/corporation/98609787">Initiative Trust</a><br>All payments made to other places will not be receipted!</small></p>
+            {% endif %}
         </div>
     </div>
 </div>
 
+<div class="col-sm-6">
+    <div class="panel {% if total_unlinked_isk < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Unlinked Character Tax Owing</h3></div>
+            <div class="panel-body">
+                <h3 class="text-center">Ƶ {{ total_unlinked_isk.total_tax__sum|intcomma }}</h3>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="col-sm-6">
+    <div class="panel panel-success" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Corporation</h3></div>
+        <div class="panel-body">
+        {% with request.user.profile.main_character as main %}
+        <div class="col-lg-6 col-sm-6">
+            <table class="table">
+                <tr>
+                    <td class="text-center"><img class="ra-avatar"
+                                                 src="https://image.eveonline.com/Corporation/{{ main.corporation_id }}_128.png">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">{{ main.corporation_name }}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-lg-6 col-sm-6">
+            {% if main.alliance_id %}
+            <table class="table">
+                <tr>
+                    <td class="text-center"><img class="ra-avatar"
+                                                 src="https://image.eveonline.com/Alliance/{{ main.alliance_id }}_128.png">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">{{ main.alliance_name }}</td>
+                <tr>
+            </table>
+            {% endif %}
+        </div>
+        {% endwith %}
+        </div>
+    </div>
+</div>
+<div class="col-sm-6">
+    <div class="panel {% if total_owed_tax < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Tax Owing</h3></div>
+            <div class="panel-body">{% if total_owed_tax < 10 %}
+                <h4 class="text-center">No Payment Required</h4> <h5 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h5>
+            {% else %}
+                <h3 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h3>
+                <p class="text-center text-muted"><small>Mining Payments are to be made to <a href="https://evewho.com/corporation/98609787">Initiative Trust</a><br>All payments made to other places will not be receipted!</small></p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endif %}
 <div class="col-sm-12">
     <div class="panel panel-primary" >
         <div class="panel-heading text-center"><h3 class="panel-title">Character Tax Breakdowns</h3></div>
@@ -56,7 +111,7 @@
         </div>
     </div>
 </div>
-
+{% if perms.toolbox.admin_alliance_mining %}
 <div class="col-sm-12">
     <div class="panel panel-danger" >
         <div class="panel-heading text-center"><h3 class="panel-title">Unlinked Character Tax Breakdowns</h3></div>
@@ -85,6 +140,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 {% block extra_javascript %}
     {% include 'bundles/datatables-js.html' %}
@@ -94,14 +150,14 @@
 {% block extra_script %}
     $(document).ready(function() {
         $('#characters-table').DataTable({
-            "filterDropDown": {
+            {% if perms.toolbox.admin_alliance_mining %}"filterDropDown": {
 					columns: [{
 						idx: 2
                             },
                             {
 						idx: 3
                             }],
-            },
+            },{% endif %}
             "columnDefs": [
                 { "sortable": false, "targets": [0] },
             ],
