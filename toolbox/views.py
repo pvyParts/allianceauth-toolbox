@@ -509,8 +509,21 @@ def admin_character_mining(request):
                                         )
                                     ,0
                                     )
+                                ).annotate(
+                                    total_mined=Coalesce(
+                                        Subquery(
+                                            CharacterMining.objects.filter(
+                                                character_id=OuterRef('character_id'))
+                                                .order_by()
+                                                .values('character_id')
+                                                .annotate(total_mined=Sum('isk_total'))
+                                                .values('total_mined')
+                                        )
+                                    ,0
+                                    )
                                 ).values('character_id',
                                          'total_tax',
+                                         'total_mined',
                                          'total_payments',
                                          'character_ownership__user__profile__main_character__character_id',
                                          'character_ownership__user__profile__main_character__character_name',
@@ -526,6 +539,7 @@ def admin_character_mining(request):
             main = ob['character_ownership__user__profile__main_character__character_name']
             if main in linked_char_breakdown:
                 linked_char_breakdown[main]['total_tax'] += int(ob['total_tax'])
+                linked_char_breakdown[main]['total_mined'] += int(ob['total_mined'])
                 linked_char_breakdown[main]['total_payments'] += ob['total_payments']
             else:
                 linked_char_breakdown[main]= {}
@@ -533,6 +547,7 @@ def admin_character_mining(request):
                 linked_char_breakdown[main]['corp'] = ob['character_ownership__user__profile__main_character__corporation_name']
                 linked_char_breakdown[main]['alliance'] = ob['character_ownership__user__profile__main_character__alliance_name']
                 linked_char_breakdown[main]['total_tax'] = int(ob['total_tax'])
+                linked_char_breakdown[main]['total_mined'] = int(ob['total_mined'])
                 linked_char_breakdown[main]['total_payments'] = ob['total_payments']
         linked_ids.append(ob['character_id'])
 
@@ -544,6 +559,8 @@ def admin_character_mining(request):
         .values('character_id')\
         .annotate(
             total_tax=Sum('tax_total')
+        ).annotate(
+            total_mined=Sum('isk_total')
         ).annotate(
             character_name=F('character_name')
         )

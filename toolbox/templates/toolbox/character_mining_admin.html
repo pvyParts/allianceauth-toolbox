@@ -89,6 +89,7 @@
                             <th class="text-center">Name</th>
                             <th class="text-center">Corporation</th>
                             <th class="text-center">Alliance</th>
+                            <th class="text-center">Total Mined</th>
                             <th class="text-center">Total Tax</th>
                             <th class="text-center">Outstanding Tax</th>
                         </thead>
@@ -104,6 +105,7 @@
                                 {% endif %}
                                 <td class="text-center" style="vertical-align:middle;">{{ char.corp }}</td>
                                 <td class="text-center" style="vertical-align:middle;">{{ char.alliance }}</td>
+                                <td class="text-center" style="vertical-align:middle;">{{ char.total_mined|intcomma }}</td>
                                 <td class="text-center" style="vertical-align:middle;">{{ char.total_tax|intcomma }}</td>
                                 <td class="text-center{% if char.total_tax|subtract:char.total_payments > 0 %} bg-warning"{% endif %}" style="vertical-align:middle;">{{ char.total_tax|subtract:char.total_payments|intcomma }}</td>
                             </tr>
@@ -127,6 +129,7 @@
                         <thead>
                             <th class="text-center"></th>
                             <th class="text-center">Name</th>
+                            <th class="text-center">Total Mined</th>
                             <th class="text-center">Outstanding Tax</th>
                         </thead>
                         <tbody>
@@ -134,6 +137,7 @@
                             <tr>
                                 <td class="text-center" style="vertical-align:middle;">{% evename_img char.character_id char.character_name "character" 32  %}</td>
                                 <td class="text-center" style="vertical-align:middle;"><a href="https://evewho.com/character/{{ char.character_id }}">{{ char.character_name }}</a></td>
+                                <td class="text-center" style="vertical-align:middle;">{{ char.total_mined|intcomma }}</td>
                                 <td class="text-center bg-warning" style="vertical-align:middle;">{{ char.total_tax|intcomma }}</td>
                             </tr>
                         {% endfor %}
