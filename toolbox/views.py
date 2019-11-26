@@ -537,19 +537,20 @@ def admin_character_mining(request):
     for ob in linked_chars:
         if int(ob['total_tax']) > 1 or ob['total_payments'] > 0:
             main = ob['character_ownership__user__profile__main_character__character_name']
-            if main in linked_char_breakdown:
-                linked_char_breakdown[main]['total_tax'] += int(ob['total_tax'])
-                linked_char_breakdown[main]['total_mined'] += int(ob['total_mined'])
-                linked_char_breakdown[main]['total_payments'] += ob['total_payments']
-            else:
-                linked_char_breakdown[main]= {}
-                linked_char_breakdown[main]['id'] = ob['character_ownership__user__profile__main_character__character_id']
-                linked_char_breakdown[main]['corp'] = ob['character_ownership__user__profile__main_character__corporation_name']
-                linked_char_breakdown[main]['alliance'] = ob['character_ownership__user__profile__main_character__alliance_name']
-                linked_char_breakdown[main]['total_tax'] = int(ob['total_tax'])
-                linked_char_breakdown[main]['total_mined'] = int(ob['total_mined'])
-                linked_char_breakdown[main]['total_payments'] = ob['total_payments']
-        linked_ids.append(ob['character_id'])
+            if main is not None:
+                if main in linked_char_breakdown:
+                    linked_char_breakdown[main]['total_tax'] += int(ob['total_tax'])
+                    linked_char_breakdown[main]['total_mined'] += int(ob['total_mined'])
+                    linked_char_breakdown[main]['total_payments'] += ob['total_payments']
+                else:
+                    linked_char_breakdown[main]= {}
+                    linked_char_breakdown[main]['id'] = ob['character_ownership__user__profile__main_character__character_id']
+                    linked_char_breakdown[main]['corp'] = ob['character_ownership__user__profile__main_character__corporation_name']
+                    linked_char_breakdown[main]['alliance'] = ob['character_ownership__user__profile__main_character__alliance_name']
+                    linked_char_breakdown[main]['total_tax'] = int(ob['total_tax'])
+                    linked_char_breakdown[main]['total_mined'] = int(ob['total_mined'])
+                    linked_char_breakdown[main]['total_payments'] = ob['total_payments']
+                linked_ids.append(ob['character_id'])
 
         total_owed_tax += (int(ob['total_tax']) - ob['total_payments'])
 
