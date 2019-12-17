@@ -22,7 +22,9 @@ from allianceauth.timerboard.models import Timer
 
 # Create your views here... *don't tell me what to do....*
 import logging
-
+import datetime
+from django.utils import timezone
+from django.db.models.functions import Coalesce
 logger = logging.getLogger(__name__)
 
 
@@ -474,6 +476,8 @@ def view_character_mining(request, character_id=None):
 
 @login_required
 def admin_character_mining(request):
+
+
     if request.user.has_perm('toolbox.admin_alliance_mining'):
         linked_chars = EveCharacter.objects.filter(character_ownership__isnull=False)
     elif request.user.has_perm('toolbox.admin_corporation_mining'):
@@ -554,6 +558,14 @@ def admin_character_mining(request):
 
         total_owed_tax += (int(ob['total_tax']) - ob['total_payments'])
 
+    month = datetime.datetime.utcnow().replace(tzinfo=timezone.utc).month
+    year = datetime.datetime.utcnow().replace(tzinfo=timezone.utc).year
+
+    month_totals = CharacterMining.objects.filter(month=month, year=year)\
+        .values('character_id')\
+        .aggregate(
+            total_tax=Coalesce(Sum('tax_total'), 0), total_mined=Coalesce(Sum('isk_total'), 0)
+        )
 
     unlinked_chars = CharacterMining.objects.exclude(
         character_id__in=linked_ids) \
@@ -572,7 +584,8 @@ def admin_character_mining(request):
                'linked_char_breakdown': linked_char_breakdown,
                'unlinked_char_breakdown': unlinked_chars,
                'total_owed_tax': total_owed_tax,
-               'total_unlinked_isk': total_unlinked_isk
+               'total_unlinked_isk': total_unlinked_isk,
+               'month_totals': month_totals
     }
 
     return render(request, 'toolbox/character_mining_admin.html', context)
