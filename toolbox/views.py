@@ -567,6 +567,12 @@ def admin_character_mining(request):
             total_tax=Coalesce(Sum('tax_total'), 0), total_mined=Coalesce(Sum('isk_total'), 0)
         )
 
+    all_time_totals = CharacterMining.objects.all()\
+        .values('character_id')\
+        .aggregate(
+            total_tax=Coalesce(Sum('tax_total'), 0), total_mined=Coalesce(Sum('isk_total'), 0)
+        )
+
     unlinked_chars = CharacterMining.objects.exclude(
         character_id__in=linked_ids) \
         .values('character_id')\
@@ -585,7 +591,8 @@ def admin_character_mining(request):
                'unlinked_char_breakdown': unlinked_chars,
                'total_owed_tax': total_owed_tax,
                'total_unlinked_isk': total_unlinked_isk,
-               'month_totals': month_totals
+               'month_totals': month_totals,
+               'all_time_totals': all_time_totals
     }
 
     return render(request, 'toolbox/character_mining_admin.html', context)

@@ -6,29 +6,28 @@
 </br>
 <h1 class="text-center">Mining Tax Admin</h1>
 {% if perms.toolbox.admin_alliance_mining %}
-<div class="col-sm-4">
+<div class="col-sm-8">
     <div class="panel {% if total_owed_tax < 10 %}panel-success{% else %}panel-warning{% endif %}" >
-        <div class="panel-heading text-center"><h3 class="panel-title">Total Tax Owing</h3></div>
-            <div class="panel-body">{% if total_owed_tax < 10 %}
-                <h4 class="text-center">No Payment Required</h4> <h5 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h5>
-            {% else %}
-                <h3 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h3>
-                <p class="text-center text-muted"><small>Mining Payments are to be made to <a href="https://evewho.com/corporation/98609787">Initiative Trust</a><br>All payments made to other places will not be receipted!</small></p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<div class="col-sm-3">
-    <div class="panel {% if total_unlinked_isk < 10 %}panel-success{% else %}panel-warning{% endif %}" >
-        <div class="panel-heading text-center"><h3 class="panel-title">Total Unlinked Character Tax Owing</h3></div>
+        <div class="panel-heading text-center"><h3 class="panel-title">All Time Values</h3></div>
             <div class="panel-body">
-                <h3 class="text-center">Ƶ {{ total_unlinked_isk.total_tax__sum|intcomma }}</h3>
+                <div class="col-sm-4">
+                    <h4 class="text-center">Total Mined:</h4>
+                    <h5 class="text-center">Ƶ {{ all_time_totals.total_mined|intcomma }}</h5>
+                </div>
+                <div class="col-sm-4">
+                    <h4 class="text-center">Total Tax:</h4>
+                    <h5 class="text-center">Ƶ {{ all_time_totals.total_tax|intcomma }}</h5>
+                </div>
+                <div class="col-sm-4">
+                    <h4 class="text-center">Total Tax Owed:</h4>
+                    <h5 class="text-center">Ƶ {{total_owed_tax|intcomma }}</h5>
+
+                </div>
         </div>
     </div>
 </div>
 
-<div class="col-sm-5">
+<div class="col-sm-4">
     <div class="panel panel-success" >
         <div class="panel-heading text-center"><h3 class="panel-title">Current Month Values</h3></div>
             <div class="panel-body">
@@ -135,6 +134,15 @@
     </div>
 </div>
 {% if perms.toolbox.admin_alliance_mining %}
+<div class="col-sm-12">
+    <div class="panel {% if total_unlinked_isk < 10 %}panel-success{% else %}panel-warning{% endif %}" >
+        <div class="panel-heading text-center"><h3 class="panel-title">Total Unlinked Character Tax Owing</h3></div>
+            <div class="panel-body">
+                <h3 class="text-center">Ƶ {{ total_unlinked_isk.total_tax__sum|intcomma }}</h3>
+        </div>
+    </div>
+</div>
+
 <div class="col-sm-12">
     <div class="panel panel-danger" >
         <div class="panel-heading text-center"><h3 class="panel-title">Unlinked Character Tax Breakdowns</h3></div>
