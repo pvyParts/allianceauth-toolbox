@@ -16,7 +16,7 @@ from django.db.models.functions import Coalesce
 from django.db.models import FloatField, F, ExpressionWrapper
 from django.db.models import Subquery, OuterRef
 from django.utils.dateparse import parse_datetime
-
+from django.template.loader import render_to_string
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.timerboard.models import Timer
 
@@ -27,7 +27,7 @@ from django.utils import timezone
 from django.db.models.functions import Coalesce
 logger = logging.getLogger(__name__)
 
-
+from . import providers
 @login_required
 def eve_note_board(request):
     add_perms = request.user.has_perm('toolbox.add_basic_eve_notes')
@@ -178,57 +178,7 @@ def add_note(request, eve_id=None):
                                        eve_id=eve_id)
 
                 return redirect('toolbox:eve_note_board')
-        else:
-            try:
-                c = esi_client_factory()
-                name = c.Universe.post_universe_names(ids=[eve_id]).result()[0]
-                char_info = None
-                corp_info = None
-                alliance_info = None
-
-                if name.get('category') == 'character':
-                    char_info = c.Character.get_characters_character_id(character_id=eve_id).result()
-                    corp_info = c.Corporation.get_corporations_corporation_id(corporation_id=char_info.get('corporation_id')).result()
-                    if corp_info.get('alliance_id', False):
-                        alliance_info = c.Alliance.get_alliances_alliance_id(alliance_id=corp_info.get('alliance_id')).result()
-
-                elif name.get('category') == 'corporation':
-                    corp_info = c.Corporation.get_corporations_corporation_id(corporation_id=eve_id).result()
-                    if corp_info.get('alliance_id', False):
-                        alliance_info = c.Alliance.get_alliances_alliance_id(alliance_id=corp_info.get('alliance_id')).result()
-            except:
-                messages.error(request,
-                               "ESI Error. Please Try again later.")
-                return redirect('toolbox:eve_note_board')
-
-            if not add_global_perms:
-                if not (name.get('category') == 'character'):
-                    messages.error(request,
-                                   "You can only add people from your own corp, Please contact a Diplo to add this note.")
-                    return redirect('toolbox:eve_note_board')
-                else:
-                    if not int(request.user.profile.main_character.corporation_id) == int(char_info.get('corporation_id')):
-                        messages.error(request,
-                                       "You can only add people from your own corp, Please contact a Diplo to add this note.")
-                        return redirect('toolbox:eve_note_board')
-
-            form = EveNoteForm()
-
-            context = {'form': form,
-                       'name': name,
-                       'char_info': char_info,
-                       'corp_info': corp_info,
-                       'alliance_info': alliance_info,
-                       'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
-                       'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
-                       'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')}
-
-            #print(context, flush=True)
-
-            return render(request, 'toolbox/add_note.html', context)
-    else:
-        return render(request, 'toolbox/evenotes.html')
-
+    return redirect('toolbox:eve_note_board')
 
 @login_required
 @permission_required('toolbox.add_new_eve_notes')
@@ -327,16 +277,20 @@ def input_moon_api(request):
                                                     }
                                             )
 
-                    for ore, ore_details in details['ores'].items():
-                        CharacterMiningObservation.objects.update_or_create(
-                            character = character_ob,
-                            ore_name=ore,
-                            ore_type =ore_details['type_id'],
-                            defaults={
-                                'count':ore_details['count'],
-                                'value':ore_details['value']
-                            }
-                        )
+                    if not created: #purge data from whats been mined for this month
+                        CharacterMiningObservation.objects.filter(character=character_ob).delete()
+                    ore_obs = []
+                    for ore, ore_details in details['ores'].items(): # add it all back in.
+                        ore_obs.append(CharacterMiningObservation(
+                                        character = character_ob,
+                                        ore_name=ore,
+                                        ore_type =ore_details['type_id'],
+                                        defaults={
+                                            'count':ore_details['count'],
+                                            'value':ore_details['value']
+                                        }
+                                    ))
+                    CharacterMiningObservation.objects.bulk_create(ore_obs)
 
                 return HttpResponse('OK')
             else:
@@ -597,4 +551,136 @@ def admin_character_mining(request):
 
     return render(request, 'toolbox/character_mining_admin.html', context)
 
+    
+@login_required
+@permission_required('toolbox.add_new_eve_note_comments')
+def get_evenote_comments(request, evenote_id=None):
+    comments = EveNote.objects.prefetch_related('comment').get(id=evenote_id).comment.all()
+    ctx = {
+        'comments': comments,
+    }
+    return HttpResponse(render_to_string('toolbox/modal_comments.html', ctx))
+
+
+@login_required
+@permission_required('toolbox.add_new_eve_notes')
+def get_edit_evenote(request, evenote_id=None):
+    note = EveNote.objects.get(id=evenote_id)
+    ctx = {
+        'note': note,
+    }
+    return HttpResponse(render_to_string('toolbox/modal_edit_note.html', ctx, request=request))
+
+@login_required
+@permission_required('toolbox.add_new_eve_note_comments')
+def get_add_comment(request, evenote_id=None):
+    note = EveNote.objects.get(id=evenote_id)
+    ctx = {
+        'note': note,
+    }
+    return HttpResponse(render_to_string('toolbox/modal_add_comment.html', ctx, request=request))
+
+@login_required
+@permission_required('toolbox.add_new_eve_notes')
+def get_add_evenote(request, eve_id=None):
+    add_perms = request.user.has_perm('toolbox.add_basic_eve_notes')
+    add_global_perms = request.user.has_perm('toolbox.add_new_eve_notes')
+    message = None
+    if not (add_perms or add_global_perms):
+        message =  "No Permissions"
+        eve_id = None
+    
+    if eve_id:
+        if request.method == 'POST':
+            try:
+                name = providers.provider.client.Universe.post_universe_names(ids=[eve_id]).result()[0]
+                char_info = None
+                corp_info = None
+                alliance_info = None
+
+                if name.get('category') == 'character':
+                    char_info = providers.provider.client.Character.get_characters_character_id(character_id=eve_id).result()
+                    corp_info = providers.provider.client.Corporation.get_corporations_corporation_id(corporation_id=char_info.get('corporation_id')).result()
+                    if corp_info.get('alliance_id', False):
+                        alliance_info = providers.provider.client.Alliance.get_alliances_alliance_id(alliance_id=corp_info.get('alliance_id')).result()
+
+                elif name.get('category') == 'corporation':
+                    corp_info = providers.provider.client.Corporation.get_corporations_corporation_id(corporation_id=eve_id).result()
+                    if corp_info.get('alliance_id', False):
+                        alliance_info = providers.provider.client.Alliance.get_alliances_alliance_id(alliance_id=corp_info.get('alliance_id')).result()
+                
+                if not add_global_perms:
+                    if not (name.get('category') == 'character'):
+                        message = "You can only add people from your own corp, Please contact a Diplo to add this note."
+                    else:
+                        if not int(request.user.profile.main_character.corporation_id) == int(char_info.get('corporation_id')):
+                            message = "You can only add people from your own corp, Please contact a Diplo to add this note."
+
+                if not message:
+                    form = EveNoteForm()
+
+                    context = {'form': form,
+                            'name': name,
+                            'char_info': char_info,
+                            'corp_info': corp_info,
+                            'alliance_info': alliance_info,
+                            'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
+                            'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
+                            'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')}
+                    return HttpResponse(render_to_string('toolbox/add_note.html', context, request=request))
+
+            except:
+                message = "ESI Error. Please Try again later."
+
+            
+    context = {'names': False,
+                'searched': False,
+                'message': message,
+                'restricted_perms': add_global_perms
+                }
+    return HttpResponse(render_to_string('toolbox/search_name.html', context, request=request))
+
+
+@login_required
+def search_names(request):
+    add_perms = request.user.has_perm('toolbox.add_basic_eve_notes')
+    add_global_perms = request.user.has_perm('toolbox.add_new_eve_notes')
+
+    if not (add_perms or add_global_perms):
+        messages.info(request, "No Permissions")
+        return redirect('toolbox:eve_note_board')
+    names = None
+    searched = False
+    message = False
+    if request.method == 'POST':
+        # check whether it's valid:
+        name = request.POST.get('name')
+        try:
+            hits = providers.provider.client.Search.get_search(search=name, categories=['character', 'corporation', 'alliance']).result()
+            corps = hits.get('corporation', [])
+            chars = hits.get('character', [])
+            alliance = hits.get('alliance', [])
+            names_list = []
+            if corps:
+                names_list += corps
+            if chars:
+                names_list += chars
+            if alliance:
+                names_list += alliance
+            if len(names_list) > 0:
+                names = providers.provider.client.Universe.post_universe_names(ids=names_list).result()
+            searched = name
+        except Exception as e:
+            logger.error(e)
+            message = e.message
+            #messages.error(request,
+            #                "ESI Error. Please Try again later.")
+            #return redirect('toolbox:eve_note_board')
+
+    context = {'names': names,
+                'searched': searched,
+                'message': message,
+                'restricted_perms': add_global_perms
+                }
+    return HttpResponse(render_to_string('toolbox/search_name.html', context, request=request))
 

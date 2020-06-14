@@ -1,16 +1,6 @@
-{% extends 'allianceauth/base.html' %}
-{% load i18n %}
-{% block page_title %}{% trans "EVE Notes" %}{% endblock %}
-{% block extra_css %}
-{% include 'bundles/datatables-css.html' %}
-{% endblock extra_css %}
-
-{% block content %}
-
-<h1 class="text-center col-md-12">Creating New Pilot Log</h1>
 <p class="text-center col-md-12">Please ensure the details below are correct!</p>
 {% if name.category == 'character' %}
-<div class="text-center col-md-offset-3 col-md-6">
+<div class="text-center col-md-12">
     <div class="text-center col-md-6">
         {% evename_img name.id name.name name.category 128 %}
         <h4>{{name.name}}</h4>
@@ -28,7 +18,7 @@
 </div>
 <div class="clearfix"></div>
 {% else %}
-<div class="text-center col-md-offset-3 col-md-6">
+<div class="text-center col-md-12">
     <div class="text-center col-md-12">
         {% evename_img name.id name.name name.category 128 %}
         <h4>{{name.name}}</h4>
@@ -36,7 +26,7 @@
 </div>
 <div class="clearfix"></div>
 {% endif %}
-<div class="col-sm-offset-3 col-sm-6">
+<div class="col-sm-12">
 <form action="/toolbox/add_note/{{name.id}}/" method="post">
     {% csrf_token %}
     <input type="hidden" name="eve_name" value="{{name.name}}" />
@@ -71,7 +61,6 @@
         {{ form.blacklisted|addclass:'form-check' }}</span>
     </h4>
     {% endif %}
-    <input type="submit" value="Submit" class="btn btn-primary">
+    <input type="submit" value="Submit" class="btn col-md-12 btn-primary">
 </form>
 </div>
-{% endblock %}

@@ -7,8 +7,7 @@
     <div class="panel-heading">
         <div class="pull-left"><H4 class="text-center">Pilot Log</H4></div>
         <div class="pull-right">
-            {% if add_note %}<a class="btn btn-success" type="button"
-                       href="{% url 'toolbox:search_name' %}" title="Add New">Add New</a>{% endif %}
+            {% if add_note %}<a class="btn btn-success modal-add-new" type="button" title="Add New">Add New</a>{% endif %}
         </div>
         <div class="clearfix"></div>
     </div>
@@ -50,16 +49,13 @@
                             <td class="text-center" style="vertical-align:middle;">
                                 <div class="text-center">
                                     {% if view_comment or add_comment %}
-                                            <a  type="button" class="btn btn-primary fa fa-comments" data-toggle="modal"
-                                                 data-target="#{{ note.id }}"  title="Show Comments"></a>
+                                            <a  type="button" class="btn btn-primary fa fa-comments modal-comments-button" id="{{ note.id }}"  title="Comments for: {{note.eve_name}}"></a>
                                     {% endif %}
                                     {% if edit_note %}
-                                    <a class="btn btn-info fa fa-edit"
-                                       type="button" href="{% url 'toolbox:edit_note' note.id %}" title="Edit">
+                                    <a class="btn btn-info fa fa-edit modal-edit-button" id="{{ note.id }}" type="button" title="Edit: {{note.eve_name}}">
                                     </a>{% endif %}
                                     {% if add_comment %}
-                                    <a class="btn btn-primary fa fa-comment"
-                                       type="button" href="{% url 'toolbox:add_comment' note.id %}" title="Add Comment">
+                                    <a class="btn btn-primary fa fa-comment modal-add-comment-button" type="button" id="{{ note.id }}" title="Add Comment for: {{note.eve_name}}">
                                     </a>{% endif %}
                                 </div>
                             </td>
@@ -76,52 +72,18 @@
         {% endif %}
     </div>
 </div>
-{% for note in notes %}
-    {% if view_comment or add_comment %}
-        {% with comments=note.comment.all %}
-            <div class="modal fade" id="{{note.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title pull-left">Comments on: {{note.eve_name}}</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                              <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-
-            {% if comments %}
-                {% for comment in comments %}
-                    {% if forloop.first %}
-                    {% else %}
-                    {% endif %}
-                        {% if comment.restricted %}
-                            {% if view_restricted_comment or add_restricted_comment %}
-                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }}) <span class="label label-warning fa fa-shield" title="Restricted"> </span></p>
-                                <p class="text-center" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ comment.comment }}</p>
-                            {% endif %}
-                        {% elif comment.ultra_restricted %}
-                            {% if view_ultra_restricted_comment or add_ultra_restricted_comment %}
-                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }}) <span class="label label-danger fa fa-shield" title="Ultra Restricted"> </span></p>
-                                <p class="text-center" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ comment.comment }}</p>
-                            {% endif %}
-                        {% else %}
-                                <p class="text-center"><b>{{comment.added_by}}</b> ({{ comment.comment_date|naturaltime }})</p>
-                                <p class="text-center" style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">{{ comment.comment }}</p>
-                        {% endif %}
-                    {% if forloop.last %}
-                    {% endif %}
-                {% empty %}
-                {% endfor %}
-            {% else %}
-            {% endif %}
-                        </div>
-                    </div>
-                </div>
+<div class="modal fade" id="modal-main" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title pull-left" id="main-modal-title"></h5>
             </div>
-        {% endwith %}
-    {% endif %}
-{% endfor %}
+            <div id="main-modal-body" class="modal-body"  style="overflow-y:auto;"></div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 {% block extra_javascript %}
@@ -131,6 +93,126 @@
 
 {% endblock %}
 {% block extra_script %}
+$(".modal-comments-button").on("click", function() {
+    var url = "{% url 'toolbox:modal_comment' 123456 %}";
+    var id = this.id;
+    var title = this.title;
+    url = url.replace('123456', id);
+    $.get(url, function(data) {
+        console.log(data);
+        modal_body = $("#main-modal-body")[0];
+        modal_title = $("#main-modal-title")[0];
+        modal_title.innerHTML = title;
+        modal_body.innerHTML = data;
+        $("#modal-main").modal();
+    });
+});
+
+$(".modal-edit-button").on("click", function() {
+    var url = "{% url 'toolbox:modal_edit' 123456 %}";
+    var id = this.id;
+    var title = this.title;
+    url = url.replace('123456', id);
+    $.get(url, function(data) {
+        console.log(data);
+        modal_body = $("#main-modal-body")[0];
+        modal_title = $("#main-modal-title")[0];
+        modal_title.innerHTML = title;
+        modal_body.innerHTML = data;
+        $("#modal-main").modal();
+    });
+});
+
+$(".modal-add-comment-button").on("click", function() {
+    var url = "{% url 'toolbox:modal_add_comment' 123456 %}";
+    var id = this.id;
+    var title = this.title;
+    url = url.replace('123456', id);
+    $.get(url, function(data) {
+        console.log(data);
+        modal_body = $("#main-modal-body")[0];
+        modal_title = $("#main-modal-title")[0];
+        modal_title.innerHTML = title;
+        modal_body.innerHTML = data;
+        $("#modal-main").modal();
+    });
+});
+
+$(".modal-add-new").on("click", function() {
+    var url = "{% url 'toolbox:search_names' %}";
+    var id = this.id;
+    var title = this.title;
+
+    function search(){
+        var url = "{% url 'toolbox:search_names' %}";
+        var title = this.title;
+        search_data = {"name":$("#id_name").val()}
+        var token =  document.getElementsByName('csrfmiddlewaretoken')[1].value
+        data = '<div class="text-center"><div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div></div>'
+        modal_body.innerHTML = data;
+        $.ajax({
+            headers: {'X-CSRFToken': token},
+            method:"POST",
+            url:url, 
+            data:search_data, 
+            success:search_post});
+
+    }
+    function search_post(data) {
+        console.log(data);
+        modal_body = $("#main-modal-body")[0];
+        modal_title = $("#main-modal-title")[0];
+        modal_title.innerHTML = title;
+        modal_body.innerHTML = data;
+        $("#modal-main").modal();
+        $("#id_name").keypress(function(event){ 
+            var keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13'){                
+                event.preventDefault();
+                search()
+            }
+        });    
+        $(".search-submit").on("click", function() {
+            modal_body = $("#main-modal-body")[0];
+            search()
+        });
+        $(".add-new-btn").on("click", function() {
+            var url = "{% url 'toolbox:modal_add' 123456 %}";
+            var id = this.id;
+            var title = this.title;
+            url = url.replace('123456', id);
+            modal_body = $("#main-modal-body")[0];
+            var token =  document.getElementsByName('csrfmiddlewaretoken')[1].value
+            data = '<div class="text-center"><div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div></div>'
+            modal_body.innerHTML = data;
+            $.ajax({
+                headers: {'X-CSRFToken': token},
+                method:"POST",
+                url:url, 
+                success:search_post});
+        });
+        $('#searched-names').DataTable({
+            "filterDropDown": {
+                columns: [{
+                    idx: 2
+                        }],
+                bootstrap: true
+             },
+            "columnDefs": [
+                { "searchable": false, "targets": [0,3] },
+                { "sortable": false, "targets": [0,3] }
+            ],
+            "order": [
+                [1, "asc"]
+            ],
+            "pageLength": 10,
+            "responsive" : true
+        });
+    }
+
+    $.get(url, search_post);
+});
+
     $(document).ready(function() {
         $('#notes-table').DataTable({
             "filterDropDown": {
@@ -157,4 +239,6 @@
             "pageLength": 25,
             "responsive" : true
         }); });
+
+                  
 {% endblock %}

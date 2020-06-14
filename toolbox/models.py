@@ -106,3 +106,18 @@ class CharacterPayment(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2, null=True, default=None)
     date = models.DateTimeField()
     trans_id = models.BigIntegerField()
+
+class MoonExtraction(models.Model):
+    structure_id = models.BigIntegerField()
+    structure_name = models.CharField(max_length=500)
+    moon_name = models.CharField(max_length=500)
+    extraction_complete = models.DateTimeField()
+
+    last_update = models.DateTimeField(auto_now_add=True)
+
+class MoonExtractionOre(models.Model):
+    moon_timer = models.ForeignKey(MoonExtraction, on_delete=models.CASCADE)
+    ore = models.CharField(max_length=500)
+    ore_percentage = models.DecimalField(max_digits=6, decimal_places=2)
+    total_m3 = models.BigIntegerField()
+    mined_m3 = models.BigIntegerField()
