@@ -277,21 +277,19 @@ def input_moon_api(request):
                                                     }
                                             )
 
-                    if not created: #purge data from whats been mined for this month
+                    if not created: #purge data from whats been mined for this char
                         CharacterMiningObservation.objects.filter(character=character_ob).delete()
                     ore_obs = []
                     for ore, ore_details in details['ores'].items(): # add it all back in.
                         ore_obs.append(CharacterMiningObservation(
                                         character = character_ob,
-                                        ore_name=ore,
-                                        ore_type =ore_details['type_id'],
-                                        defaults={
-                                            'count':ore_details['count'],
-                                            'value':ore_details['value']
-                                        }
-                                    ))
+                                        ore_name = ore,
+                                        ore_type = ore_details['type_id'],
+                                        count = ore_details['count'],
+                                        value = ore_details['value']
+                                        )
+                                    )
                     CharacterMiningObservation.objects.bulk_create(ore_obs)
-
                 return HttpResponse('OK')
             else:
                 raise Http404
