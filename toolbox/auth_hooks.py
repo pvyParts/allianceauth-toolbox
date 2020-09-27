@@ -6,7 +6,7 @@ from allianceauth.services.hooks import MenuItemHook, UrlHook
 class AllianceMenu(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self, 'Pilot Log',
-                              'fa fa-address-book fa-fw',
+                              'fas fa-address-book fa-fw',
                               'toolbox:eve_note_board',
                               navactive=['toolbox:eve_note_board'])
 
@@ -19,7 +19,7 @@ class AllianceMenu(MenuItemHook):
 class BlacklistMenu(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self, 'Blacklist',
-                              'fa fa-ban fa-fw',
+                              'fas fa-ban fa-fw',
                               'toolbox:blacklist',
                               navactive=['toolbox:blacklist'])
 
@@ -32,7 +32,7 @@ class BlacklistMenu(MenuItemHook):
 class TaxMenu(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self, 'Moon Taxes',
-                              'fa fa-moon-o fa-fw',
+                              'fas fa-moon fa-fw',
                               'toolbox:view_character_mining',
                               navactive=['toolbox:view_character_mining'])
 
@@ -44,7 +44,7 @@ class TaxMenu(MenuItemHook):
 class TaxAdminMenu(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self, 'Moon Tax Admin',
-                              'fa fa-moon-o fa-fw',
+                              'fas fa-moon fa-fw',
                               'toolbox:admin_character_mining',
                               navactive=['toolbox:admin_character_mining'])
 
