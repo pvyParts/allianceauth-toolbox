@@ -17,28 +17,28 @@
 <form action="/toolbox/edit_note/{{note.id}}/" method="post">
     {% csrf_token %}
     <input type="hidden" name="note_id" value="{{note.id}}">
-    
-    <h4 class="text-center">
-        <span class="label label-warning"><label for="id_restricted">Restricted:</label>
-        <input type="checkbox" name="restricted" class="form-check" id="id_restricted"></span>
-    </h4>
-    
-    
-    <h4 class="text-center">
-        <span class="label label-danger"><label for="id_ultra_restricted">Ultra Restricted:</label>
-        <input type="checkbox" name="ultra_restricted" class="form-check" id="id_ultra_restricted"></span>
-    </h4>
-    
-    <p>
-        <label for="id_reason">Reason:</label>
-        <textarea name="reason" cols="40" rows="10" class="form-control" required="" id="id_reason">{{note.reason}}</textarea>
-    </p>
-    
-    <h4 class="text-center">
-        <span class="label label-danger"><label for="id_blacklisted">Blacklist:</label>
-        <input type="checkbox" name="blacklisted" class="form-check" id="id_blacklisted" {% if note.blacklisted %}checked{% endif %}></span>
-    </h4>
-    
+    {% if add_restricted_note %}
+        <h4 class="text-center">
+            <span class="label label-warning"><label for="id_restricted">Restricted:</label>
+            <input type="checkbox" name="restricted" class="form-check" id="id_restricted"></span>
+        </h4>
+    {% endif %}
+    {% if add_ultra_restricted_note %}
+        <h4 class="text-center">
+            <span class="label label-danger"><label for="id_ultra_restricted">Ultra Restricted:</label>
+            <input type="checkbox" name="ultra_restricted" class="form-check" id="id_ultra_restricted"></span>
+        </h4>
+    {% endif %}
+        <p>
+            <label for="id_reason">Reason:</label>
+            <textarea name="reason" cols="40" rows="10" class="form-control" required="" id="id_reason">{{note.reason}}</textarea>
+        </p>
+    {% if add_blacklist %}
+        <h4 class="text-center">
+            <span class="label label-danger"><label for="id_blacklisted">Blacklist:</label>
+            <input type="checkbox" name="blacklisted" class="form-check" id="id_blacklisted" {% if note.blacklisted %}checked{% endif %}></span>
+        </h4>
+    {% endif %}
     <input type="submit" value="Submit" class="btn btn-primary col col-md-12">
 </form>
 </div>

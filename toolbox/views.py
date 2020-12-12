@@ -556,6 +556,10 @@ def get_evenote_comments(request, evenote_id=None):
     comments = EveNote.objects.prefetch_related('comment').get(id=evenote_id).comment.all()
     ctx = {
         'comments': comments,
+        'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
+        'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
+        'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')
+
     }
     return HttpResponse(render_to_string('toolbox/modal_comments.html', ctx))
 
@@ -566,6 +570,10 @@ def get_edit_evenote(request, evenote_id=None):
     note = EveNote.objects.get(id=evenote_id)
     ctx = {
         'note': note,
+        'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
+        'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
+        'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')
+
     }
     return HttpResponse(render_to_string('toolbox/modal_edit_note.html', ctx, request=request))
 
@@ -575,6 +583,10 @@ def get_add_comment(request, evenote_id=None):
     note = EveNote.objects.get(id=evenote_id)
     ctx = {
         'note': note,
+        'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
+        'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
+        'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')
+
     }
     return HttpResponse(render_to_string('toolbox/modal_add_comment.html', ctx, request=request))
 
