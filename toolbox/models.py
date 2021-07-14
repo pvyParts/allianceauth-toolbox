@@ -1,5 +1,9 @@
 from django.db import models
 from model_utils import Choices
+from allianceauth.authentication.models import CharacterOwnership
+from django.contrib.auth.models import User
+from django.db.models import Q
+from collections import defaultdict
 
 
 class EveNote(models.Model):
