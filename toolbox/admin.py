@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import EveNote, EveNoteComment, ApiKey, ApiKeyLog, CharacterMining,CharacterPayment
+from .models import EveNote, EveNoteComment, ApiKey, ApiKeyLog, CharacterMining,CharacterPayment,ToolboxEveNoteFilter
 
 
 admin.site.register(EveNote)
@@ -12,3 +12,6 @@ admin.site.register(ApiKeyLog)
 
 admin.site.register(CharacterPayment)
 admin.site.register(CharacterMining)
+
+
+admin.site.register(ToolboxEveNoteFilter)

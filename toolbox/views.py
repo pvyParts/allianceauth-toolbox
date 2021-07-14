@@ -6,7 +6,6 @@ from esi.clients import esi_client_factory
 from .models import EveNote, EveNoteComment, CharacterMining, CharacterMiningObservation, ApiKey, ApiKeyLog, CharacterPayment
 from .forms import SearchEveName, EveNoteForm, AddComment
 import json
-import logging
 from django.http import Http404, HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_exempt
@@ -20,12 +19,13 @@ from django.template.loader import render_to_string
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.timerboard.models import Timer
 
-# Create your views here... *don't tell me what to do....*
 import logging
 import datetime
 from django.utils import timezone
 from django.db.models.functions import Coalesce
 logger = logging.getLogger(__name__)
+
+# Create your views here... *don't tell me what to do...*
 
 from . import providers
 @login_required

@@ -121,3 +121,53 @@ class MoonExtractionOre(models.Model):
     ore_percentage = models.DecimalField(max_digits=6, decimal_places=2)
     total_m3 = models.BigIntegerField()
     mined_m3 = models.BigIntegerField()
+
+
+class FilterBase(models.Model):
+
+    name = models.CharField(max_length=500)
+    description = models.CharField(max_length=500)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return f"{self.name}: {self.description}"
+
+    def process_filter(self, user: User):
+        raise NotImplementedError("Please Create a filter function!")
+
+    def audit_filter(self, user: User):
+        raise NotImplementedError("Please Create a audit function!")
+
+
+class ToolboxEveNoteFilter(FilterBase):
+    class Meta:
+        verbose_name = "Smart Filter: User Has Flagged/Blacklisted Char"
+        verbose_name_plural = verbose_name
+
+    def process_filter(self, user: User):
+        return self.audit_filter(User.objects.filter(pk=user.pk))[user.pk]['check']
+
+    def audit_filter(self, users):
+        blacklisted_char = EveNote.objects.filter(blacklisted=True, 
+                                    eve_catagory='character').values('eve_id')
+        blacklisted_corp = EveNote.objects.filter(blacklisted=True, 
+                                    eve_catagory='corporation').values('eve_id')
+        blacklisted_alli = EveNote.objects.filter(blacklisted=True, 
+                                    eve_catagory='alliance').values('eve_id')
+        co = CharacterOwnership.objects.filter((
+                            Q(character__character_id__in=blacklisted_char) | 
+                            Q(character__corporation_id__in=blacklisted_corp) | 
+                            Q(character__alliance_id__in=blacklisted_alli)),
+                            user__in=users).values('user__id', 'character__character_name')
+
+        chars = defaultdict(list)
+        for c in co:
+            chars[c['user__id']].append(c['character__character_name'])
+
+        output = defaultdict(lambda: {"message": "", "check": True})
+        for c, char_list in chars.items():
+            output[c] = {"message": ", ".join(char_list), "check": False}
+        return output
+
