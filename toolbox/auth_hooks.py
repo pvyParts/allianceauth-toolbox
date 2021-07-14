@@ -1,7 +1,7 @@
 from . import urls
 from allianceauth import hooks
 from allianceauth.services.hooks import MenuItemHook, UrlHook
-
+from .models import ToolboxEveNoteFilter
 
 class AllianceMenu(MenuItemHook):
     def __init__(self):
@@ -75,3 +75,7 @@ def register_menu():
 @hooks.register('url_hook')
 def register_url():
     return UrlHook(urls, 'toolbox', r'^toolbox/')
+
+@hooks.register("secure_group_filters")
+def filters():
+    return [ToolboxEveNoteFilter]
