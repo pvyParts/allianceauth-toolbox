@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('eveonline', '0016_character_names_are_not_unique'),
+        ('eveonline', '0013_evecorporationinfo_ceo_id'),
         ('toolbox', '0015_toolboxevenotefilter'),
     ]
 
