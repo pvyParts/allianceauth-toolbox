@@ -31,7 +31,6 @@ from . import providers
 # Create your views here... *don't tell me what to do...*
 
 @login_required
-@permission_required(['toolbox.add_basic_eve_notes', 'toolbox.add_new_eve_notes'])
 @token_required(['esi-search.search_structures.v1'])
 def toolbox_set_search_character(request, token):
     if token:
