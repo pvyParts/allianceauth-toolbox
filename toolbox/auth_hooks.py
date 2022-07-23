@@ -3,7 +3,7 @@ from allianceauth import hooks
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 from .models import ToolboxEveNoteFilter
 
-class AllianceMenu(MenuItemHook):
+class ToolboxMenu(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self, 'Pilot Log',
                               'fas fa-address-book fa-fw',
@@ -28,6 +28,7 @@ class BlacklistMenu(MenuItemHook):
             return MenuItemHook.render(self, request)
         return ''
 
+"""
 
 class TaxMenu(MenuItemHook):
     def __init__(self):
@@ -61,14 +62,15 @@ def register_menu():
 @hooks.register('menu_item_hook')
 def register_menu():
     return TaxAdminMenu()
+"""
 
 @hooks.register('menu_item_hook')
-def register_menu():
-    return AllianceMenu()
+def register_ToolboxMenu():
+    return ToolboxMenu()
 
 
 @hooks.register('menu_item_hook')
-def register_menu():
+def register_BlacklistMenu():
     return BlacklistMenu()
 
 

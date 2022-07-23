@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib import messages
 from esi.clients import esi_client_factory
+from esi.decorators import token_required
+from esi.models import Token
 
-from .models import EveNote, EveNoteComment, CharacterMining, CharacterMiningObservation, ApiKey, ApiKeyLog, CharacterPayment
+from .models import EveNote, EveNoteComment, CharacterMining, CharacterMiningObservation, ApiKey, ApiKeyLog, CharacterPayment, ToolboxSearchCharacter
 from .forms import SearchEveName, EveNoteForm, AddComment
 import json
 from django.http import Http404, HttpResponse
@@ -24,10 +26,34 @@ import datetime
 from django.utils import timezone
 from django.db.models.functions import Coalesce
 logger = logging.getLogger(__name__)
+from . import providers
 
 # Create your views here... *don't tell me what to do...*
 
-from . import providers
+@login_required
+@permission_required(['toolbox.add_basic_eve_notes', 'toolbox.add_new_eve_notes'])
+@token_required(['esi-search.search_structures.v1'])
+def toolbox_set_search_character(request, token):
+    if token:
+        char = EveCharacter.objects.get(character_id=token.character_id)
+        char, _ = ToolboxSearchCharacter.objects.update_or_create(
+            user=request.user,
+            defaults={
+                "character": char
+            }
+        )
+        messages.success(request, ("Linked Search Character: {}".format(token.character_name)))
+    return redirect("toolbox:eve_note_board")
+
+
+def get_search_char(user):
+    try:
+        char = ToolboxSearchCharacter.objects.get(user=user)
+        return char.character
+    except ToolboxSearchCharacter.DoesNotExist:
+        return False
+
+
 @login_required
 def eve_note_board(request):
     add_perms = request.user.has_perm('toolbox.add_basic_eve_notes')
@@ -79,6 +105,7 @@ def eve_note_board(request):
         'view_comment': request.user.has_perm('toolbox.view_eve_note_comments'),
         'view_restricted_comment': request.user.has_perm('toolbox.view_eve_note_restricted_comments'),
         'view_ultra_restricted_comment': request.user.has_perm('toolbox.view_eve_note_ultra_restricted_comments'),
+        "search_char": get_search_char(request.user),
         'notes': eve_notes
     }
 
@@ -666,7 +693,10 @@ def search_names(request):
         # check whether it's valid:
         name = request.POST.get('name')
         try:
-            hits = providers.provider.client.Search.get_search(search=name, categories=['character', 'corporation', 'alliance']).result()
+            search_char = get_search_char(request.user)
+            token = Token.get_token(search_char.character_id, ['esi-search.search_structures.v1'])
+            hits = providers.provider.client.Search.get_characters_character_id_search(
+                search=name, categories=['character', 'corporation', 'alliance'], character_id=search_char.character_id, token=token.valid_access_token()).result()
             corps = hits.get('corporation', [])
             chars = hits.get('character', [])
             alliance = hits.get('alliance', [])

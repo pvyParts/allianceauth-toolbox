@@ -1,9 +1,15 @@
+from allianceauth.eveonline.models import EveCharacter
 from django.db import models
 from model_utils import Choices
 from allianceauth.authentication.models import CharacterOwnership
 from django.contrib.auth.models import User
 from django.db.models import Q
 from collections import defaultdict
+
+
+class ToolboxSearchCharacter(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    character = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
 
 
 class EveNote(models.Model):
