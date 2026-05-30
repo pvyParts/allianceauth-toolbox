@@ -2,7 +2,7 @@ import logging
 
 from celery import shared_task
 from .models import EveNote
-from esi.clients import esi_client_factory
+# from esi.clients import esi_client_factory
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from esi.clients import esi_client_factory
+# from esi.clients import esi_client_factory
 from esi.errors import TokenExpiredError
 from esi.models import Token
 
@@ -38,14 +38,14 @@ def get_operation_auth_headers(token, also_return_response=False):
     _headers={'headers':get_auth_header(token), "also_return_response":also_return_response}
     return _headers
 
-class EsiResponseClient:
-    def __init__(self, token=None):
-        self._client = None
+# class EsiResponseClient:
+#     def __init__(self, token=None):
+#         self._client = None
 
-    @property
-    def client(self):
-        if self._client is None:
-            self._client = esi_client_factory()  # all groups latest
-        return self._client
+#     @property
+#     def client(self):
+#         if self._client is None:
+#             self._client = esi_client_factory()  # all groups latest
+#         return self._client
 
-provider = EsiResponseClient()
+provider = None#EsiResponseClient()

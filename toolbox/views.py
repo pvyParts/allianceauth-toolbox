@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib import messages
-from esi.clients import esi_client_factory
+# from esi.clients import esi_client_factory
 from esi.decorators import token_required
 from esi.models import Token
 
@@ -583,9 +583,8 @@ def get_evenote_comments(request, evenote_id=None):
     ctx = {
         'comments': comments,
         'add_blacklist': request.user.has_perm('toolbox.add_to_blacklist'),
-        'add_ultra_restricted_note': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
-        'add_restricted_note': request.user.has_perm('toolbox.add_restricted_eve_notes')
-
+        'add_ultra_restricted_comment': request.user.has_perm('toolbox.add_ultra_restricted_eve_notes'),
+        'add_restricted_comment': request.user.has_perm('toolbox.add_restricted_eve_notes')
     }
     return HttpResponse(render_to_string('toolbox/modal_comments.html', ctx))
 
